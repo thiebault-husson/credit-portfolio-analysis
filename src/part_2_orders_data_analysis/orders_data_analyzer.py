@@ -21,9 +21,28 @@ class OrdersAnalyzer:
             orders_path: Path to the orders CSV file
             bank_transactions_path: Path to the bank transactions CSV file
         """
-        self.orders_data = OrdersDataProcessor.load_orders_data(orders_path)
-        self.bank_transactions = OrdersDataProcessor.load_bank_transactions(bank_transactions_path)
-        self.cohort_analysis = None
+        self.orders_path = orders_path
+        self.bank_transactions_path = bank_transactions_path
+        self._orders_data = None
+        self._bank_transactions = None
+        self._cohort_analysis = None
+        self._global_ltv = None
+        self._global_aov = None
+        self._global_cac = None
+    
+    @property
+    def orders_data(self) -> pd.DataFrame:
+        """Lazy load orders data."""
+        if self._orders_data is None:
+            self._orders_data = OrdersDataProcessor.load_orders_data(self.orders_path)
+        return self._orders_data
+    
+    @property
+    def bank_transactions(self) -> pd.DataFrame:
+        """Lazy load bank transactions data."""
+        if self._bank_transactions is None:
+            self._bank_transactions = OrdersDataProcessor.load_bank_transactions(self.bank_transactions_path)
+        return self._bank_transactions
     
     def analyze_orders(self) -> Dict:
         """
@@ -33,18 +52,18 @@ class OrdersAnalyzer:
             Dictionary with all Part 2 metrics and insights
         """
         # Calculate cohort metrics
-        self.cohort_analysis = self._calculate_cohort_metrics()
+        self._cohort_analysis = self._calculate_cohort_metrics()
         
-        # Calculate LTV, AOV, CAC
-        ltv_analysis = self._calculate_lifetime_value()
-        aov_analysis = self._calculate_average_order_value()
-        cac_analysis = self._calculate_customer_acquisition_cost()
+        # Calculate LTV, AOV, CAC (both global and cohort-level)
+        ltv_analysis = self._calculate_cohort_ltv()
+        aov_analysis = self._calculate_cohort_aov()
+        cac_analysis = self._calculate_cohort_cac()
         
         # Generate insights
         insights = self._generate_insights()
         
         return {
-            'cohort_metrics': self.cohort_analysis,
+            'cohort_metrics': self._cohort_analysis,
             'lifetime_value': ltv_analysis,
             'average_order_value': aov_analysis,
             'customer_acquisition_cost': cac_analysis,
@@ -83,83 +102,137 @@ class OrdersAnalyzer:
         
         return cohort_metrics
     
-    def _calculate_lifetime_value(self) -> Dict:
+    def _calculate_global_ltv(self) -> Dict:
+        """
+        Calculate global lifetime value metrics from clean orders data (cached).
+        
+        Returns:
+            Dictionary with global LTV metrics
+        """
+        if self._global_ltv is None:
+            # Calculate global metrics directly from orders data
+            total_revenue = self.orders_data['net_revenue'].sum()
+            total_customers = self.orders_data['customer'].nunique()
+            global_ltv = total_revenue / total_customers if total_customers > 0 else 0
+            
+            # Calculate customer-level LTV for median
+            customer_ltv = self.orders_data.groupby('customer')['net_revenue'].sum()
+            
+            self._global_ltv = {
+                'average_ltv': global_ltv,
+                'median_ltv': customer_ltv.median(),
+                'total_customers': total_customers,
+                'total_revenue': total_revenue
+            }
+        
+        return self._global_ltv
+    
+    def _calculate_cohort_ltv(self) -> Dict:
         """
         Calculate lifetime value by monthly cohort.
         
         Returns:
-            Dictionary with LTV analysis
+            Dictionary with cohort-level LTV analysis
         """
-        if self.cohort_analysis is None:
-            self.cohort_analysis = self._calculate_cohort_metrics()
+        if self._cohort_analysis is None:
+            self._cohort_analysis = self._calculate_cohort_metrics()
         
-        ltv_data = self.cohort_analysis.copy()
+        ltv_data = self._cohort_analysis.copy()
         ltv_data['ltv'] = ltv_data['average_revenue_per_customer']
         
         return {
             'by_cohort': ltv_data[['cohort_month', 'customer_count', 'ltv']].to_dict('records'),
-            'summary': {
-                'average_ltv': ltv_data['ltv'].mean(),
-                'median_ltv': ltv_data['ltv'].median(),
-                'total_customers': ltv_data['customer_count'].sum(),
-                'total_ltv': ltv_data['ltv'].sum()
-            }
+            'summary': self._calculate_global_ltv()
         }
     
-    def _calculate_average_order_value(self) -> Dict:
+    def _calculate_global_aov(self) -> Dict:
+        """
+        Calculate global average order value metrics from clean orders data (cached).
+        
+        Returns:
+            Dictionary with global AOV metrics
+        """
+        if self._global_aov is None:
+            # Calculate global metrics directly from orders data
+            total_revenue = self.orders_data['net_revenue'].sum()
+            total_orders = len(self.orders_data)
+            global_aov = total_revenue / total_orders if total_orders > 0 else 0
+            
+            self._global_aov = {
+                'average_aov': global_aov,
+                'median_aov': self.orders_data['net_revenue'].median(),
+                'total_orders': total_orders,
+                'total_revenue': total_revenue
+            }
+        
+        return self._global_aov
+    
+    def _calculate_cohort_aov(self) -> Dict:
         """
         Calculate average order value by monthly cohort.
         
         Returns:
-            Dictionary with AOV analysis
+            Dictionary with cohort-level AOV analysis
         """
-        if self.cohort_analysis is None:
-            self.cohort_analysis = self._calculate_cohort_metrics()
+        if self._cohort_analysis is None:
+            self._cohort_analysis = self._calculate_cohort_metrics()
         
-        aov_data = self.cohort_analysis.copy()
+        aov_data = self._cohort_analysis.copy()
         aov_data['aov'] = aov_data['total_revenue'] / aov_data['total_orders']
         
         return {
             'by_cohort': aov_data[['cohort_month', 'customer_count', 'aov']].to_dict('records'),
-            'summary': {
-                'average_aov': aov_data['aov'].mean(),
-                'median_aov': aov_data['aov'].median(),
-                'total_orders': aov_data['total_orders'].sum(),
-                'total_revenue': aov_data['total_revenue'].sum()
-            }
+            'summary': self._calculate_global_aov()
         }
     
-    def _calculate_customer_acquisition_cost(self) -> Dict:
+    def _calculate_global_cac(self) -> Dict:
+        """
+        Calculate global customer acquisition cost metrics (cached).
+        
+        Returns:
+            Dictionary with global CAC metrics
+        """
+        if self._global_cac is None:
+            # Estimate CAC based on bank transactions (marketing spend)
+            marketing_spend = self.bank_transactions[
+                self.bank_transactions['category'].str.contains('Marketing', na=False)
+            ]['amount'].sum()
+            
+            total_customers = self.orders_data['customer'].nunique()
+            estimated_cac = abs(marketing_spend) / total_customers if total_customers > 0 else 0
+            
+            # Calculate LTV/CAC ratio using global LTV
+            global_ltv = self._calculate_global_ltv()['average_ltv']
+            ltv_cac_ratio = global_ltv / estimated_cac if estimated_cac > 0 else 0
+            
+            self._global_cac = {
+                'estimated_cac': estimated_cac,
+                'total_marketing_spend': abs(marketing_spend),
+                'total_customers': total_customers,
+                'ltv_cac_ratio': ltv_cac_ratio
+            }
+        
+        return self._global_cac
+    
+    def _calculate_cohort_cac(self) -> Dict:
         """
         Calculate customer acquisition cost by monthly cohort.
         
         Returns:
-            Dictionary with CAC analysis
+            Dictionary with cohort-level CAC analysis
         """
-        # This would typically use marketing spend data
-        # For now, we'll estimate based on available data
-        if self.cohort_analysis is None:
-            self.cohort_analysis = self._calculate_cohort_metrics()
+        if self._cohort_analysis is None:
+            self._cohort_analysis = self._calculate_cohort_metrics()
         
-        # Estimate CAC based on bank transactions (marketing spend)
-        marketing_spend = self.bank_transactions[
-            self.bank_transactions['category'].str.contains('Marketing', na=False)
-        ]['amount'].sum()
+        # Get global CAC (same for all cohorts as estimate)
+        global_cac = self._calculate_global_cac()['estimated_cac']
         
-        total_customers = self.cohort_analysis['customer_count'].sum()
-        estimated_cac = abs(marketing_spend) / total_customers if total_customers > 0 else 0
-        
-        cac_data = self.cohort_analysis.copy()
-        cac_data['cac'] = estimated_cac  # Same CAC for all cohorts as estimate
+        cac_data = self._cohort_analysis.copy()
+        cac_data['cac'] = global_cac  # Same CAC for all cohorts as estimate
         
         return {
             'by_cohort': cac_data[['cohort_month', 'customer_count', 'cac']].to_dict('records'),
-            'summary': {
-                'estimated_cac': estimated_cac,
-                'total_marketing_spend': abs(marketing_spend),
-                'total_customers': total_customers,
-                'ltv_cac_ratio': self.cohort_analysis['average_revenue_per_customer'].mean() / estimated_cac if estimated_cac > 0 else 0
-            }
+            'summary': self._calculate_global_cac()
         }
     
     def _generate_insights(self) -> Dict:
