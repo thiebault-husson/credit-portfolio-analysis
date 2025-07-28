@@ -251,7 +251,7 @@ class OrdersDataProcessor:
                             result.iloc[i+j] = pd.NaT
             
             return result
-
+    
     @staticmethod
     def _extract_location(line_items_str: str) -> Dict[str, Any]:
         """

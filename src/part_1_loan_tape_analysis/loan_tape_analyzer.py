@@ -5,7 +5,7 @@ Main analyzer class for loan portfolio analysis (Part 1).
 import pandas as pd
 from typing import Dict, List, Optional
 from .loan_tape_data_processor import LoanDataProcessor
-from .loan_tape_metrics import PortfolioMetricsCalculator, BusinessMetricsCalculator
+from .loan_tape_metrics import PortfolioMetricsCalculator, BusinessMetricsCalculator, YieldMetricsCalculator
 
 
 class LoanPortfolioAnalyzer:
@@ -21,6 +21,7 @@ class LoanPortfolioAnalyzer:
         self.data = LoanDataProcessor.load_loan_tape(data_path)
         self.portfolio_metrics = None
         self.business_metrics = None
+        self.yield_metrics = None
         self.insights = None
     
     def analyze_portfolio(self, 
@@ -34,7 +35,7 @@ class LoanPortfolioAnalyzer:
             end_date: Optional end date filter (YYYY-MM format)
             
         Returns:
-            Dictionary with portfolio metrics, business metrics, and insights
+            Dictionary with portfolio metrics, business metrics, yield metrics, and insights
         """
         # Calculate portfolio metrics
         self.portfolio_metrics = PortfolioMetricsCalculator.calculate_portfolio_metrics(
@@ -44,12 +45,16 @@ class LoanPortfolioAnalyzer:
         # Calculate business metrics
         self.business_metrics = BusinessMetricsCalculator.calculate_business_metrics(self.data)
         
+        # Calculate yield metrics
+        self.yield_metrics = YieldMetricsCalculator(self.data).calculate_all_yield_metrics()
+        
         # Generate insights
         self.insights = self._generate_insights()
         
         return {
             'portfolio_metrics': self.portfolio_metrics,
             'business_metrics': self.business_metrics,
+            'yield_metrics': self.yield_metrics,
             'insights': self.insights
         }
     
@@ -78,6 +83,20 @@ class LoanPortfolioAnalyzer:
             DataFrame with business metrics grouped by vintage month
         """
         return BusinessMetricsCalculator.calculate_business_metrics(self.data)
+    
+    def get_yield_metrics(self, filter_active: bool = True) -> Dict:
+        """
+        Get yield metrics.
+        
+        Args:
+            filter_active: Whether to filter for active accounts only
+            
+        Returns:
+            Dictionary with all yield metrics
+        """
+        if self.yield_metrics is None:
+            self.yield_metrics = YieldMetricsCalculator(self.data).calculate_all_yield_metrics(filter_active)
+        return self.yield_metrics
     
     def get_insights(self) -> Dict:
         """

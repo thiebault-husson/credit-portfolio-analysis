@@ -136,6 +136,17 @@ class CreditPortfolioAnalyzer:
             print(f"   Gross Yield: {latest_month['gross_yield']:.2%}")
             print(f"   Net Yield: {latest_month['net_yield']:.2%}")
         
+        # Yield metrics
+        yield_metrics = self.part1_results.get('yield_metrics')
+        if yield_metrics:
+            print(f"\n💰 Yield Metrics:")
+            print(f"   Gross Portfolio Yield: {yield_metrics['gross_portfolio_yield']['gross_portfolio_yield']:.2%}")
+            print(f"   Net Portfolio Yield: {yield_metrics['net_portfolio_yield']['net_portfolio_yield']:.2%}")
+            print(f"   Net Portfolio Yield After Cost of Capital: {yield_metrics['net_portfolio_yield_after_coc']['net_portfolio_yield_after_coc']:.2%}")
+            print(f"   Line Gross Portfolio Yield: {yield_metrics['line_gross_portfolio_yield']['line_gross_portfolio_yield']:.2%}")
+            print(f"   Card Gross Portfolio Yield: {yield_metrics['card_gross_portfolio_yield']['card_gross_portfolio_yield']:.2%}")
+            print(f"   Card Net Portfolio Yield: {yield_metrics['card_net_portfolio_yield']['card_net_portfolio_yield']:.2%}")
+        
         # Business metrics
         business_metrics = self.part1_results['business_metrics']
         if not business_metrics.empty:

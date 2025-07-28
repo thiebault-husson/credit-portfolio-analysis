@@ -6,6 +6,8 @@ import pandas as pd
 import numpy as np
 from typing import Dict, List, Optional
 from datetime import datetime
+from functools import lru_cache
+import re
 
 
 class PortfolioMetricsCalculator:
@@ -45,7 +47,7 @@ class PortfolioMetricsCalculator:
     @staticmethod
     def _calculate_monthly_metrics(group: pd.DataFrame) -> Dict:
         """
-        Calculate metrics for a specific month.
+        Calculate metrics for a specific month using industry-standard approach.
         
         Args:
             group: DataFrame for a specific month
@@ -58,24 +60,37 @@ class PortfolioMetricsCalculator:
         delinquent_accounts = len(group[group['accountEndingStatus'] == 'Delinquent'])
         defaulted_accounts = len(group[group['accountEndingStatus'] == 'Default'])
         charged_off_accounts = len(group[group['accountEndingStatus'] == 'ChargedOff'])
+        closed_accounts = len(group[group['accountEndingStatus'] == 'Closed'])
+        current_accounts = len(group[group['accountEndingStatus'] == 'Current'])
         
         # Calculate rates
         delinquency_rate = delinquent_accounts / total_accounts if total_accounts > 0 else 0
         default_rate = defaulted_accounts / total_accounts if total_accounts > 0 else 0
         charge_off_rate = charged_off_accounts / total_accounts if total_accounts > 0 else 0
         
-        # Calculate portfolio size and revenue
-        portfolio_size = group['accountDailyAveragePrincipalBalance'].sum()
-        total_revenue = (group['lineFeesAccrued'].sum() + 
-                        group['cardNetInterchangeAccrued'].sum())
+        # Calculate portfolio size using industry-standard approach
+        # Denominator: balances including Current, Delinquent, Default
+        denom_mask = group['accountEndingStatus'].isin(['Current', 'Delinquent', 'Default'])
+        portfolio_size = group.loc[denom_mask, 'accountDailyAveragePrincipalBalance'].sum()
         
-        # Calculate yields
-        gross_yield = total_revenue / portfolio_size if portfolio_size > 0 else 0
+        # Calculate revenue using industry-standard approach
+        # Numerator: revenue only from Current and Delinquent
+        num_mask = group['accountEndingStatus'].isin(['Current', 'Delinquent'])
+        total_revenue = (group.loc[num_mask, 'lineFeesAccrued'].sum() + 
+                        group.loc[num_mask, 'cardNetInterchangeAccrued'].sum())
+        
+        # Calculate yields using industry-standard approach
+        gross_yield = (total_revenue / portfolio_size) * 12 if portfolio_size > 0 else 0  # Monthly annualization
         # Net yield = gross yield - (SOFR + 5%), assuming SOFR is ~5% currently
-        net_yield = gross_yield - 0.10  # 5% SOFR + 5% cost of capital
+        net_yield = gross_yield - 0.10  # 10% cost of capital
         
         return {
             'total_accounts': total_accounts,
+            'current_accounts': current_accounts,
+            'delinquent_accounts': delinquent_accounts,
+            'defaulted_accounts': defaulted_accounts,
+            'charged_off_accounts': charged_off_accounts,
+            'closed_accounts': closed_accounts,
             'delinquency_rate': delinquency_rate,
             'default_rate': default_rate,
             'charge_off_rate': charge_off_rate,
@@ -111,76 +126,424 @@ class PortfolioMetricsCalculator:
         return data
 
 
+class YieldMetricsCalculator:
+    """
+    Calculate comprehensive yield metrics using industry-standard approach.
+    
+    Implements yield metrics with proper status-based filtering:
+    - Current: Include both balances and revenue fully
+    - Delinquent: Include balances fully, include revenue if accrued
+    - Default: Include balances in denominator, exclude revenue from numerator
+    - ChargedOff: Exclude from both numerator and denominator
+    - Closed: Exclude from both numerator and denominator
+    """
+    
+    def __init__(self, data: pd.DataFrame):
+        """
+        Initialize calculator with preprocessed data.
+        
+        Args:
+            data: Clean DataFrame with loan tape data
+        """
+        self.raw_data = data.copy()
+        self.data = self._preprocess_data()
+        
+    def _parse_currency(self, value) -> float:
+        """Parse currency string to float."""
+        if pd.isna(value) or value == '':
+            return 0.0
+        if isinstance(value, (int, float)):
+            return float(value)
+        if isinstance(value, str):
+            cleaned = re.sub(r'[$,]', '', value.strip())
+            try:
+                return float(cleaned)
+            except ValueError:
+                return 0.0
+        return 0.0
+    
+    def _preprocess_data(self) -> pd.DataFrame:
+        """Preprocess data once for all calculations."""
+        df = self.raw_data.copy()
+        
+        # Parse currency columns
+        currency_columns = [
+            'lineFeesAccrued', 'cardNetInterchangeAccrued', 'cardRewardsAccrued',
+            'lineDailyAveragePrincipalBalance', 'cardDailyAveragePrincipalBalance',
+            'accountDailyAveragePrincipalBalance'
+        ]
+        
+        for col in currency_columns:
+            if col in df.columns:
+                df[col] = df[col].apply(self._parse_currency)
+        
+        # Parse date columns
+        date_columns = ['snapshotBeginningAt', 'snapshotEndingAt', 'accountActivatedAt']
+        for col in date_columns:
+            if col in df.columns:
+                df[col] = pd.to_datetime(df[col])
+        
+        return df
+    
+    def _get_filtered_data(self, filter_active: bool = True) -> pd.DataFrame:
+        """Get filtered data based on criteria."""
+        df = self.data.copy()
+        
+        if filter_active:
+            # Filter out charged off accounts for cleaner analysis
+            df = df[df['accountEndingStatus'] != 'ChargedOff']
+        
+        return df
+    
+    def calculate_gross_portfolio_yield(self, filter_active: bool = True) -> Dict:
+        """
+        Calculate Gross Portfolio Yield using industry-standard approach.
+        
+        Formula: (Revenue from Current+Delinquent / Balance from Current+Delinquent+Default) × (365/period_days)
+        
+        Args:
+            filter_active: Whether to filter for active accounts only
+            
+        Returns:
+            Dictionary with GPY metrics
+        """
+        df = self._get_filtered_data(filter_active)
+        
+        # Calculate period days for proper annualization
+        df['period_days'] = (df['snapshotEndingAt'] - df['snapshotBeginningAt']).dt.days
+        df['period_days'] = df['period_days'].clip(lower=1)  # Ensure no division by zero
+        
+        # Denominator: balances including Current, Delinquent, Default
+        denom_mask = df['accountEndingStatus'].isin(['Current', 'Delinquent', 'Default'])
+        total_balance = df.loc[denom_mask, 'accountDailyAveragePrincipalBalance'].sum()
+        
+        # Numerator: revenue only from Current and Delinquent
+        num_mask = df['accountEndingStatus'].isin(['Current', 'Delinquent'])
+        total_revenue = (df.loc[num_mask, 'lineFeesAccrued'].sum() + 
+                        df.loc[num_mask, 'cardNetInterchangeAccrued'].sum())
+        
+        # Calculate average period days for annualization
+        avg_period_days = df.loc[num_mask, 'period_days'].mean()
+        if pd.isna(avg_period_days) or avg_period_days == 0:
+            avg_period_days = 30  # Default to 30 days if calculation fails
+        
+        # Calculate GPY with proper annualization
+        gross_portfolio_yield = (total_revenue / total_balance) * (365 / avg_period_days) if total_balance > 0 else 0
+        
+        # Calculate component breakdowns
+        current_revenue = df.loc[df['accountEndingStatus'] == 'Current', ['lineFeesAccrued', 'cardNetInterchangeAccrued']].sum().sum()
+        delinquent_revenue = df.loc[df['accountEndingStatus'] == 'Delinquent', ['lineFeesAccrued', 'cardNetInterchangeAccrued']].sum().sum()
+        
+        current_balance = df.loc[df['accountEndingStatus'] == 'Current', 'accountDailyAveragePrincipalBalance'].sum()
+        delinquent_balance = df.loc[df['accountEndingStatus'] == 'Delinquent', 'accountDailyAveragePrincipalBalance'].sum()
+        default_balance = df.loc[df['accountEndingStatus'] == 'Default', 'accountDailyAveragePrincipalBalance'].sum()
+        
+        return {
+            'gross_portfolio_yield': gross_portfolio_yield,
+            'total_revenue': total_revenue,
+            'total_balance': total_balance,
+            'current_revenue': current_revenue,
+            'delinquent_revenue': delinquent_revenue,
+            'current_balance': current_balance,
+            'delinquent_balance': delinquent_balance,
+            'default_balance': default_balance,
+            'accounts_included_revenue': len(df[num_mask]),
+            'accounts_included_balance': len(df[denom_mask]),
+            'avg_period_days': avg_period_days,
+            'annualization_factor': 365 / avg_period_days
+        }
+    
+    def calculate_net_portfolio_yield(self, filter_active: bool = True) -> Dict:
+        """
+        Calculate Net Portfolio Yield using industry-standard approach.
+        
+        Formula: ((Revenue from Current+Delinquent - Costs) / Balance from Current+Delinquent+Default) × (365/period_days)
+        
+        Args:
+            filter_active: Whether to filter for active accounts only
+            
+        Returns:
+            Dictionary with NPY metrics
+        """
+        df = self._get_filtered_data(filter_active)
+        
+        # Calculate period days for proper annualization
+        df['period_days'] = (df['snapshotEndingAt'] - df['snapshotBeginningAt']).dt.days
+        df['period_days'] = df['period_days'].clip(lower=1)  # Ensure no division by zero
+        
+        # Denominator: balances including Current, Delinquent, Default
+        denom_mask = df['accountEndingStatus'].isin(['Current', 'Delinquent', 'Default'])
+        total_balance = df.loc[denom_mask, 'accountDailyAveragePrincipalBalance'].sum()
+        
+        # Numerator: revenue only from Current and Delinquent, minus costs
+        num_mask = df['accountEndingStatus'].isin(['Current', 'Delinquent'])
+        total_revenue = (df.loc[num_mask, 'lineFeesAccrued'].sum() + 
+                        df.loc[num_mask, 'cardNetInterchangeAccrued'].sum())
+        
+        # Costs: card rewards from Current and Delinquent accounts
+        total_costs = df.loc[num_mask, 'cardRewardsAccrued'].sum()
+        
+        # Calculate average period days for annualization
+        avg_period_days = df.loc[num_mask, 'period_days'].mean()
+        if pd.isna(avg_period_days) or avg_period_days == 0:
+            avg_period_days = 30  # Default to 30 days if calculation fails
+        
+        # Calculate NPY with proper annualization
+        net_revenue = total_revenue - total_costs
+        net_portfolio_yield = (net_revenue / total_balance) * (365 / avg_period_days) if total_balance > 0 else 0
+        
+        return {
+            'net_portfolio_yield': net_portfolio_yield,
+            'total_revenue': total_revenue,
+            'total_costs': total_costs,
+            'net_revenue': net_revenue,
+            'total_balance': total_balance,
+            'cost_ratio': (total_costs / total_revenue * 100) if total_revenue > 0 else 0,
+            'avg_period_days': avg_period_days,
+            'annualization_factor': 365 / avg_period_days
+        }
+    
+    def calculate_net_portfolio_yield_after_cost_of_capital(self, filter_active: bool = True) -> Dict:
+        """
+        Calculate Net Portfolio Yield After Cost of Capital using industry-standard approach.
+        
+        Formula: Net Portfolio Yield - (SOFR + 5%) = NPY - 10%
+        
+        Args:
+            filter_active: Whether to filter for active accounts only
+            
+        Returns:
+            Dictionary with NPY After Cost of Capital metrics
+        """
+        # First calculate the base Net Portfolio Yield
+        npy_result = self.calculate_net_portfolio_yield(filter_active)
+        
+        # Cost of capital: SOFR + 5% = 10% (assuming SOFR is ~5% currently)
+        cost_of_capital = 0.10
+        
+        # Calculate NPY after cost of capital
+        npy_after_coc = npy_result['net_portfolio_yield'] - cost_of_capital
+        
+        return {
+            'net_portfolio_yield_after_coc': npy_after_coc,
+            'base_net_portfolio_yield': npy_result['net_portfolio_yield'],
+            'cost_of_capital': cost_of_capital,
+            'total_revenue': npy_result['total_revenue'],
+            'total_costs': npy_result['total_costs'],
+            'net_revenue': npy_result['net_revenue'],
+            'total_balance': npy_result['total_balance'],
+            'cost_ratio': npy_result['cost_ratio'],
+            'avg_period_days': npy_result['avg_period_days'],
+            'annualization_factor': npy_result['annualization_factor']
+        }
+    
+    def calculate_line_gross_portfolio_yield(self, filter_active: bool = True) -> Dict:
+        """
+        Calculate Line Gross Portfolio Yield using industry-standard approach.
+        
+        Formula: (Line Revenue from Current+Delinquent / Line Balance from Current+Delinquent+Default) × (365/period_days)
+        """
+        df = self._get_filtered_data(filter_active)
+        
+        # Calculate period days for proper annualization
+        df['period_days'] = (df['snapshotEndingAt'] - df['snapshotBeginningAt']).dt.days
+        df['period_days'] = df['period_days'].clip(lower=1)  # Ensure no division by zero
+        
+        # Denominator: line balances including Current, Delinquent, Default
+        denom_mask = df['accountEndingStatus'].isin(['Current', 'Delinquent', 'Default'])
+        total_line_balance = df.loc[denom_mask, 'lineDailyAveragePrincipalBalance'].sum()
+        
+        # Numerator: line revenue only from Current and Delinquent
+        num_mask = df['accountEndingStatus'].isin(['Current', 'Delinquent'])
+        total_line_revenue = df.loc[num_mask, 'lineFeesAccrued'].sum()
+        
+        # Calculate average period days for annualization
+        avg_period_days = df.loc[num_mask, 'period_days'].mean()
+        if pd.isna(avg_period_days) or avg_period_days == 0:
+            avg_period_days = 30  # Default to 30 days if calculation fails
+        
+        # Calculate line GPY with proper annualization
+        line_gross_portfolio_yield = (total_line_revenue / total_line_balance) * (365 / avg_period_days) if total_line_balance > 0 else 0
+        
+        return {
+            'line_gross_portfolio_yield': line_gross_portfolio_yield,
+            'total_line_revenue': total_line_revenue,
+            'total_line_balance': total_line_balance,
+            'accounts_with_line_revenue': len(df[num_mask & (df['lineFeesAccrued'] > 0)]),
+            'accounts_with_line_balance': len(df[denom_mask & (df['lineDailyAveragePrincipalBalance'] > 0)]),
+            'avg_period_days': avg_period_days,
+            'annualization_factor': 365 / avg_period_days
+        }
+    
+    def calculate_card_gross_portfolio_yield(self, filter_active: bool = True) -> Dict:
+        """
+        Calculate Card Gross Portfolio Yield using industry-standard approach.
+        
+        Formula: (Card Revenue from Current+Delinquent / Card Balance from Current+Delinquent+Default) × (365/period_days)
+        """
+        df = self._get_filtered_data(filter_active)
+        
+        # Calculate period days for proper annualization
+        df['period_days'] = (df['snapshotEndingAt'] - df['snapshotBeginningAt']).dt.days
+        df['period_days'] = df['period_days'].clip(lower=1)  # Ensure no division by zero
+        
+        # Denominator: card balances including Current, Delinquent, Default
+        denom_mask = df['accountEndingStatus'].isin(['Current', 'Delinquent', 'Default'])
+        total_card_balance = df.loc[denom_mask, 'cardDailyAveragePrincipalBalance'].sum()
+        
+        # Numerator: card revenue only from Current and Delinquent
+        num_mask = df['accountEndingStatus'].isin(['Current', 'Delinquent'])
+        total_card_revenue = df.loc[num_mask, 'cardNetInterchangeAccrued'].sum()
+        
+        # Calculate average period days for annualization
+        avg_period_days = df.loc[num_mask, 'period_days'].mean()
+        if pd.isna(avg_period_days) or avg_period_days == 0:
+            avg_period_days = 30  # Default to 30 days if calculation fails
+        
+        # Calculate card GPY with proper annualization
+        card_gross_portfolio_yield = (total_card_revenue / total_card_balance) * (365 / avg_period_days) if total_card_balance > 0 else 0
+        
+        return {
+            'card_gross_portfolio_yield': card_gross_portfolio_yield,
+            'total_card_revenue': total_card_revenue,
+            'total_card_balance': total_card_balance,
+            'accounts_with_card_revenue': len(df[num_mask & (df['cardNetInterchangeAccrued'] > 0)]),
+            'accounts_with_card_balance': len(df[denom_mask & (df['cardDailyAveragePrincipalBalance'] > 0)]),
+            'avg_period_days': avg_period_days,
+            'annualization_factor': 365 / avg_period_days
+        }
+    
+    def calculate_card_net_portfolio_yield(self, filter_active: bool = True) -> Dict:
+        """
+        Calculate Card Net Portfolio Yield using industry-standard approach.
+        
+        Formula: ((Card Revenue from Current+Delinquent - Card Costs) / Card Balance from Current+Delinquent+Default) × (365/period_days)
+        """
+        df = self._get_filtered_data(filter_active)
+        
+        # Calculate period days for proper annualization
+        df['period_days'] = (df['snapshotEndingAt'] - df['snapshotBeginningAt']).dt.days
+        df['period_days'] = df['period_days'].clip(lower=1)  # Ensure no division by zero
+        
+        # Denominator: card balances including Current, Delinquent, Default
+        denom_mask = df['accountEndingStatus'].isin(['Current', 'Delinquent', 'Default'])
+        total_card_balance = df.loc[denom_mask, 'cardDailyAveragePrincipalBalance'].sum()
+        
+        # Numerator: card revenue and costs only from Current and Delinquent
+        num_mask = df['accountEndingStatus'].isin(['Current', 'Delinquent'])
+        total_card_revenue = df.loc[num_mask, 'cardNetInterchangeAccrued'].sum()
+        total_card_costs = df.loc[num_mask, 'cardRewardsAccrued'].sum()
+        
+        # Calculate average period days for annualization
+        avg_period_days = df.loc[num_mask, 'period_days'].mean()
+        if pd.isna(avg_period_days) or avg_period_days == 0:
+            avg_period_days = 30  # Default to 30 days if calculation fails
+        
+        # Calculate card NPY with proper annualization
+        net_card_revenue = total_card_revenue - total_card_costs
+        card_net_portfolio_yield = (net_card_revenue / total_card_balance) * (365 / avg_period_days) if total_card_balance > 0 else 0
+        
+        return {
+            'card_net_portfolio_yield': card_net_portfolio_yield,
+            'total_card_revenue': total_card_revenue,
+            'total_card_costs': total_card_costs,
+            'net_card_revenue': net_card_revenue,
+            'total_card_balance': total_card_balance,
+            'card_cost_ratio': (total_card_costs / total_card_revenue * 100) if total_card_revenue > 0 else 0,
+            'avg_period_days': avg_period_days,
+            'annualization_factor': 365 / avg_period_days
+        }
+    
+    def calculate_all_yield_metrics(self, filter_active: bool = True) -> Dict:
+        """
+        Calculate all yield metrics using industry-standard approach.
+        
+        Returns:
+            Dictionary with all yield metrics
+        """
+        return {
+            'gross_portfolio_yield': self.calculate_gross_portfolio_yield(filter_active),
+            'net_portfolio_yield': self.calculate_net_portfolio_yield(filter_active),
+            'net_portfolio_yield_after_coc': self.calculate_net_portfolio_yield_after_cost_of_capital(filter_active),
+            'line_gross_portfolio_yield': self.calculate_line_gross_portfolio_yield(filter_active),
+            'card_gross_portfolio_yield': self.calculate_card_gross_portfolio_yield(filter_active),
+            'card_net_portfolio_yield': self.calculate_card_net_portfolio_yield(filter_active)
+        }
+    
+    def get_data_summary(self) -> Dict:
+        """Get summary of data used in calculations."""
+        status_counts = self.data['accountEndingStatus'].value_counts()
+        
+        return {
+            'total_records': len(self.data),
+            'unique_businesses': self.data['businessGuid'].nunique(),
+            'unique_accounts': self.data['capitalAccountGuid'].nunique(),
+            'account_statuses': status_counts.to_dict(),
+            'date_range': {
+                'min_date': self.data['snapshotEndingAt'].min(),
+                'max_date': self.data['snapshotEndingAt'].max()
+            }
+        }
+
+
 class BusinessMetricsCalculator:
-    """Calculate business-level metrics."""
+    """Calculate business-level metrics by vintage."""
     
     @staticmethod
     def calculate_business_metrics(data: pd.DataFrame) -> pd.DataFrame:
         """
-        Calculate business metrics by monthly vintage.
+        Calculate business metrics grouped by vintage month.
         
         Args:
             data: Preprocessed loan tape data
             
         Returns:
-            DataFrame with business metrics grouped by vintage month
+            DataFrame with business metrics by vintage
         """
-        # Add vintage month (account activation month)
+        # Group by business and vintage month
         data['vintage_month'] = data['accountActivatedAt'].dt.to_period('M')
         
-        # Calculate account age in months
-        data['account_age_months'] = (
-            (data['snapshotEndingAt'] - data['accountActivatedAt']).dt.days / 30
-        ).round(0)
-        
-        # Group by business and vintage month
         business_metrics = data.groupby(['businessGuid', 'vintage_month']).agg({
-            'accountEndingLimit': 'max',  # Limit
-            'accountDailyAveragePrincipalBalance': 'mean',  # Average daily balance
-            'account_age_months': 'mean',  # Account age
-            'lineFeesAccrued': 'sum',  # Interest revenue
-            'cardNetInterchangeAccrued': 'sum',  # Interchange revenue
-            'lineEndingApr': 'mean',  # APR
-            'accountEndingStatus': lambda x: BusinessMetricsCalculator._get_priority_status(x),  # Status
-            'accountPaymentRate': 'mean'  # Payment rate
+            'accountEndingLimit': 'last',
+            'accountDailyAveragePrincipalBalance': 'mean',
+            'accountActivatedAt': 'first',
+            'lineFeesAccrued': 'sum',
+            'cardNetInterchangeAccrued': 'sum',
+            'lineEndingApr': 'last',
+            'accountEndingStatus': lambda x: BusinessMetricsCalculator._get_priority_status(x)
         }).reset_index()
         
-        # Calculate total revenue
-        business_metrics['total_revenue'] = (
+        # Calculate additional metrics
+        business_metrics['credit_account_age'] = (
+            business_metrics['accountActivatedAt'].dt.to_period('M') - 
+            business_metrics['vintage_month']
+        ).apply(lambda x: x.n)
+        
+        business_metrics['revenue'] = (
             business_metrics['lineFeesAccrued'] + 
             business_metrics['cardNetInterchangeAccrued']
         )
-        
-        # Rename columns for clarity
-        business_metrics = business_metrics.rename(columns={
-            'accountEndingLimit': 'limit',
-            'accountDailyAveragePrincipalBalance': 'average_daily_balance',
-            'account_age_months': 'credit_account_age',
-            'lineFeesAccrued': 'interest_revenue',
-            'cardNetInterchangeAccrued': 'interchange_revenue',
-            'lineEndingApr': 'apr',
-            'accountEndingStatus': 'borrower_status',
-            'accountPaymentRate': 'payment_rate'
-        })
         
         return business_metrics
     
     @staticmethod
     def _get_priority_status(statuses: pd.Series) -> str:
         """
-        Get the highest priority status from a series of statuses.
+        Get priority status based on business rules.
+        
         Priority order: Closed > Current > Delinquent > Default > ChargedOff
-        
-        Args:
-            statuses: Series of account statuses
-            
-        Returns:
-            Highest priority status
         """
-        priority_order = ['Closed', 'Current', 'Delinquent', 'Default', 'ChargedOff']
+        status_priority = {
+            'Closed': 1,
+            'Current': 2,
+            'Delinquent': 3,
+            'Default': 4,
+            'ChargedOff': 5
+        }
         
-        for status in priority_order:
-            if status in statuses.values:
-                return status
+        # Get the status with highest priority (lowest number)
+        valid_statuses = [s for s in statuses if s in status_priority]
+        if not valid_statuses:
+            return 'Unknown'
         
-        return 'Current'  # Default fallback 
+        return min(valid_statuses, key=lambda x: status_priority[x]) 
