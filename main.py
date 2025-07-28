@@ -155,23 +155,47 @@ class CreditPortfolioAnalyzer:
         if not self.part2_results:
             return
         
-        # LTV
+        # LTV - Global and Per-Cohort
         ltv_analysis = self.part2_results['lifetime_value']
         print(f"\n💰 Lifetime Value (LTV):")
-        print(f"   Average LTV: ${ltv_analysis['summary']['average_ltv']:,.2f}")
-        print(f"   Total customers: {ltv_analysis['summary']['total_customers']}")
+        print(f"   📊 Global Average LTV: ${ltv_analysis['summary']['average_ltv']:,.2f}")
+        print(f"   👥 Total customers: {ltv_analysis['summary']['total_customers']}")
         
-        # AOV
+        # Show per-cohort LTV
+        if 'by_cohort' in ltv_analysis and ltv_analysis['by_cohort']:
+            print(f"\n   📈 LTV by Monthly Cohort:")
+            for cohort in ltv_analysis['by_cohort'][:5]:  # Show first 5 cohorts
+                print(f"      {cohort['cohort_month']}: ${cohort['ltv']:,.2f} ({cohort['customer_count']} customers)")
+            if len(ltv_analysis['by_cohort']) > 5:
+                print(f"      ... and {len(ltv_analysis['by_cohort']) - 5} more cohorts")
+        
+        # AOV - Global and Per-Cohort
         aov_analysis = self.part2_results['average_order_value']
         print(f"\n📦 Average Order Value (AOV):")
-        print(f"   Average AOV: ${aov_analysis['summary']['average_aov']:,.2f}")
-        print(f"   Total orders: {aov_analysis['summary']['total_orders']}")
+        print(f"   📊 Global Average AOV: ${aov_analysis['summary']['average_aov']:,.2f}")
+        print(f"   📦 Total orders: {aov_analysis['summary']['total_orders']}")
         
-        # CAC
+        # Show per-cohort AOV
+        if 'by_cohort' in aov_analysis and aov_analysis['by_cohort']:
+            print(f"\n   📈 AOV by Monthly Cohort:")
+            for cohort in aov_analysis['by_cohort'][:5]:  # Show first 5 cohorts
+                print(f"      {cohort['cohort_month']}: ${cohort['aov']:,.2f} ({cohort['customer_count']} customers)")
+            if len(aov_analysis['by_cohort']) > 5:
+                print(f"      ... and {len(aov_analysis['by_cohort']) - 5} more cohorts")
+        
+        # CAC - Global and Per-Cohort
         cac_analysis = self.part2_results['customer_acquisition_cost']
         print(f"\n🎯 Customer Acquisition Cost (CAC):")
-        print(f"   Estimated CAC: ${cac_analysis['summary']['estimated_cac']:,.2f}")
-        print(f"   LTV/CAC ratio: {cac_analysis['summary']['ltv_cac_ratio']:.2f}")
+        print(f"   📊 Global Estimated CAC: ${cac_analysis['summary']['estimated_cac']:,.2f}")
+        print(f"   📊 LTV/CAC ratio: {cac_analysis['summary']['ltv_cac_ratio']:.2f}")
+        
+        # Show per-cohort CAC
+        if 'by_cohort' in cac_analysis and cac_analysis['by_cohort']:
+            print(f"\n   📈 CAC by Monthly Cohort:")
+            for cohort in cac_analysis['by_cohort'][:5]:  # Show first 5 cohorts
+                print(f"      {cohort['cohort_month']}: ${cohort['cac']:,.2f} ({cohort['customer_count']} customers)")
+            if len(cac_analysis['by_cohort']) > 5:
+                print(f"      ... and {len(cac_analysis['by_cohort']) - 5} more cohorts")
         
         # Insights
         insights = self.part2_results['insights']
