@@ -169,7 +169,186 @@ class LoanPortfolioAnalyzer:
                 'accounts_per_business': len(self.data) / business_count if business_count > 0 else 0
             }
         
+        # Data quality analysis
+        insights['data_quality_analysis'] = self._analyze_data_quality()
+        
+        # Industry insights
+        insights['industry_insights'] = self._generate_industry_insights()
+        
         return insights
+    
+    def _analyze_data_quality(self) -> Dict:
+        """
+        Analyze data quality issues and their industry implications.
+        
+        Returns:
+            Dictionary with data quality analysis
+        """
+        total_records = len(self.data)
+        
+        # Negative balances analysis
+        negative_balances = self.data[self.data['accountDailyAveragePrincipalBalance'] < 0]
+        negative_balance_pct = (len(negative_balances) / total_records) * 100
+        
+        # Negative revenue analysis
+        negative_revenue = self.data[(self.data['lineFeesAccrued'] < 0) | 
+                                   (self.data['cardNetInterchangeAccrued'] < 0)]
+        negative_revenue_pct = (len(negative_revenue) / total_records) * 100
+        
+        # Zero balance with revenue analysis
+        zero_balance_revenue = self.data[(self.data['accountDailyAveragePrincipalBalance'] == 0) & 
+                                       ((self.data['lineFeesAccrued'] > 0) | 
+                                        (self.data['cardNetInterchangeAccrued'] > 0))]
+        zero_balance_revenue_pct = (len(zero_balance_revenue) / total_records) * 100
+        
+        return {
+            'total_records': total_records,
+            'negative_balances': {
+                'count': len(negative_balances),
+                'percentage': negative_balance_pct,
+                'min_balance': negative_balances['accountDailyAveragePrincipalBalance'].min() if len(negative_balances) > 0 else 0,
+                'max_balance': negative_balances['accountDailyAveragePrincipalBalance'].max() if len(negative_balances) > 0 else 0,
+                'mean_balance': negative_balances['accountDailyAveragePrincipalBalance'].mean() if len(negative_balances) > 0 else 0,
+                'status_distribution': negative_balances['accountEndingStatus'].value_counts().to_dict() if len(negative_balances) > 0 else {},
+                'type_distribution': negative_balances['accountType'].value_counts().to_dict() if len(negative_balances) > 0 else {}
+            },
+            'negative_revenue': {
+                'count': len(negative_revenue),
+                'percentage': negative_revenue_pct,
+                'line_fees_negative': len(self.data[self.data['lineFeesAccrued'] < 0]),
+                'card_interchange_negative': len(self.data[self.data['cardNetInterchangeAccrued'] < 0]),
+                'status_distribution': negative_revenue['accountEndingStatus'].value_counts().to_dict() if len(negative_revenue) > 0 else {}
+            },
+            'zero_balance_revenue': {
+                'count': len(zero_balance_revenue),
+                'percentage': zero_balance_revenue_pct,
+                'total_revenue': (zero_balance_revenue['lineFeesAccrued'].sum() + 
+                                zero_balance_revenue['cardNetInterchangeAccrued'].sum()) if len(zero_balance_revenue) > 0 else 0,
+                'average_revenue': (zero_balance_revenue['lineFeesAccrued'].sum() + 
+                                  zero_balance_revenue['cardNetInterchangeAccrued'].sum()) / len(zero_balance_revenue) if len(zero_balance_revenue) > 0 else 0,
+                'status_distribution': zero_balance_revenue['accountEndingStatus'].value_counts().to_dict() if len(zero_balance_revenue) > 0 else {}
+            },
+            'data_quality_score': ((total_records - len(negative_balances) - len(negative_revenue) - len(zero_balance_revenue)) / total_records) * 100
+        }
+    
+    def _generate_industry_insights(self) -> Dict:
+        """
+        Generate industry-specific insights and recommendations.
+        
+        Returns:
+            Dictionary with industry insights
+        """
+        # Product performance analysis
+        line_revenue = self.data['lineFeesAccrued'].sum()
+        card_revenue = self.data['cardNetInterchangeAccrued'].sum()
+        card_costs = self.data['cardRewardsAccrued'].sum()
+        
+        # Account type performance
+        account_type_performance = {}
+        for acc_type in self.data['accountType'].unique():
+            type_data = self.data[self.data['accountType'] == acc_type]
+            account_type_performance[acc_type] = {
+                'count': len(type_data),
+                'total_balance': type_data['accountDailyAveragePrincipalBalance'].sum(),
+                'total_revenue': type_data['lineFeesAccrued'].sum() + type_data['cardNetInterchangeAccrued'].sum(),
+                'total_costs': type_data['cardRewardsAccrued'].sum(),
+                'net_revenue': (type_data['lineFeesAccrued'].sum() + type_data['cardNetInterchangeAccrued'].sum()) - type_data['cardRewardsAccrued'].sum(),
+                'average_balance': type_data['accountDailyAveragePrincipalBalance'].mean(),
+                'delinquency_rate': len(type_data[type_data['accountEndingStatus'] == 'Delinquent']) / len(type_data)
+            }
+        
+        # Portfolio composition insights
+        portfolio_composition = {
+            'line_products_share': len(self.data[self.data['accountType'] == 'LineRevolving']) / len(self.data),
+            'card_products_share': len(self.data[self.data['accountType'].str.startswith('Card')]) / len(self.data),
+            'performing_accounts_share': len(self.data[self.data['accountEndingStatus'] == 'Current']) / len(self.data),
+            'troubled_accounts_share': len(self.data[self.data['accountEndingStatus'].isin(['Delinquent', 'Default', 'ChargedOff'])]) / len(self.data)
+        }
+        
+        # Revenue concentration analysis
+        revenue_concentration = {
+            'line_revenue_share': line_revenue / (line_revenue + card_revenue) if (line_revenue + card_revenue) > 0 else 0,
+            'card_revenue_share': card_revenue / (line_revenue + card_revenue) if (line_revenue + card_revenue) > 0 else 0,
+            'card_cost_ratio': card_costs / card_revenue if card_revenue > 0 else 0,
+            'net_revenue_margin': ((line_revenue + card_revenue) - card_costs) / (line_revenue + card_revenue) if (line_revenue + card_revenue) > 0 else 0
+        }
+        
+        # Industry benchmarks and recommendations
+        industry_benchmarks = {
+            'typical_delinquency_rate': 0.02,  # 2% industry average
+            'typical_default_rate': 0.01,      # 1% industry average
+            'typical_card_cost_ratio': 0.30,   # 30% typical card rewards cost
+            'typical_net_yield': 0.12,         # 12% typical net yield
+            'data_quality_threshold': 0.95     # 95% data quality threshold
+        }
+        
+        # Performance vs benchmarks
+        current_delinquency = len(self.data[self.data['accountEndingStatus'] == 'Delinquent']) / len(self.data)
+        current_default = len(self.data[self.data['accountEndingStatus'] == 'Default']) / len(self.data)
+        current_card_cost_ratio = card_costs / card_revenue if card_revenue > 0 else 0
+        
+        performance_vs_benchmarks = {
+            'delinquency_vs_benchmark': 'better' if current_delinquency < industry_benchmarks['typical_delinquency_rate'] else 'worse',
+            'default_vs_benchmark': 'better' if current_default < industry_benchmarks['typical_default_rate'] else 'worse',
+            'card_cost_vs_benchmark': 'better' if current_card_cost_ratio < industry_benchmarks['typical_card_cost_ratio'] else 'worse',
+            'data_quality_vs_benchmark': 'better' if self._analyze_data_quality()['data_quality_score'] > (industry_benchmarks['data_quality_threshold'] * 100) else 'worse'
+        }
+        
+        return {
+            'account_type_performance': account_type_performance,
+            'portfolio_composition': portfolio_composition,
+            'revenue_concentration': revenue_concentration,
+            'industry_benchmarks': industry_benchmarks,
+            'performance_vs_benchmarks': performance_vs_benchmarks,
+            'recommendations': self._generate_recommendations()
+        }
+    
+    def _generate_recommendations(self) -> List[str]:
+        """
+        Generate industry recommendations based on analysis.
+        
+        Returns:
+            List of recommendations
+        """
+        recommendations = []
+        
+        # Data quality recommendations
+        data_quality = self._analyze_data_quality()
+        if data_quality['data_quality_score'] < 95:
+            recommendations.append("Monitor data quality issues - consider implementing data validation procedures")
+        else:
+            recommendations.append("Data quality is excellent - current procedures are effective")
+        
+        # Risk management recommendations
+        delinquency_rate = len(self.data[self.data['accountEndingStatus'] == 'Delinquent']) / len(self.data)
+        if delinquency_rate > 0.02:
+            recommendations.append("Delinquency rate above industry average - review underwriting standards")
+        else:
+            recommendations.append("Delinquency rate is well-managed - current risk controls are effective")
+        
+        # Product mix recommendations
+        card_share = len(self.data[self.data['accountType'].str.startswith('Card')]) / len(self.data)
+        if card_share > 0.3:
+            recommendations.append("High card product concentration - consider diversifying product mix")
+        else:
+            recommendations.append("Product mix is well-diversified - good balance of line and card products")
+        
+        # Revenue optimization recommendations
+        card_costs = self.data['cardRewardsAccrued'].sum()
+        card_revenue = self.data['cardNetInterchangeAccrued'].sum()
+        if card_costs > card_revenue:
+            recommendations.append("Card products operating at loss - review rewards structure and interchange rates")
+        else:
+            recommendations.append("Card products profitable - current rewards structure is sustainable")
+        
+        # Portfolio growth recommendations
+        total_balance = self.data['accountDailyAveragePrincipalBalance'].sum()
+        if total_balance > 0:
+            recommendations.append("Portfolio shows healthy growth - continue current expansion strategy")
+        else:
+            recommendations.append("Monitor portfolio growth - consider growth initiatives")
+        
+        return recommendations
     
     def get_summary_stats(self) -> Dict:
         """

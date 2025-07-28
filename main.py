@@ -160,6 +160,60 @@ class CreditPortfolioAnalyzer:
             print(f"   Total Portfolio Size: ${insights['portfolio_growth']['total_portfolio_size']:,.2f}")
             print(f"   Total Businesses: {insights['portfolio_growth']['total_businesses']}")
             print(f"   Delinquency Rate: {insights['risk_analysis']['delinquency_rate']:.2%}")
+            
+            # Data Quality Analysis
+            if 'data_quality_analysis' in insights:
+                dq = insights['data_quality_analysis']
+                print(f"\n🔍 Data Quality Analysis:")
+                print(f"   Data Quality Score: {dq['data_quality_score']:.1f}%")
+                print(f"   Negative Balances: {dq['negative_balances']['count']} accounts ({dq['negative_balances']['percentage']:.1f}%)")
+                print(f"   Negative Revenue: {dq['negative_revenue']['count']} accounts ({dq['negative_revenue']['percentage']:.1f}%)")
+                print(f"   Zero Balance Revenue: {dq['zero_balance_revenue']['count']} accounts ({dq['zero_balance_revenue']['percentage']:.1f}%)")
+            
+            # Industry Insights
+            if 'industry_insights' in insights:
+                industry = insights['industry_insights']
+                print(f"\n🏭 Industry Analysis:")
+                
+                # Portfolio Composition
+                comp = industry['portfolio_composition']
+                print(f"   Portfolio Composition:")
+                print(f"     Line Products: {comp['line_products_share']:.1%}")
+                print(f"     Card Products: {comp['card_products_share']:.1%}")
+                print(f"     Performing Accounts: {comp['performing_accounts_share']:.1%}")
+                print(f"     Troubled Accounts: {comp['troubled_accounts_share']:.1%}")
+                
+                # Revenue Analysis
+                rev = industry['revenue_concentration']
+                print(f"   Revenue Concentration:")
+                print(f"     Line Revenue Share: {rev['line_revenue_share']:.1%}")
+                print(f"     Card Revenue Share: {rev['card_revenue_share']:.1%}")
+                print(f"     Card Cost Ratio: {rev['card_cost_ratio']:.1%}")
+                print(f"     Net Revenue Margin: {rev['net_revenue_margin']:.1%}")
+                
+                # Performance vs Benchmarks
+                perf = industry['performance_vs_benchmarks']
+                print(f"   Performance vs Industry Benchmarks:")
+                print(f"     Delinquency Rate: {perf['delinquency_vs_benchmark']}")
+                print(f"     Default Rate: {perf['default_vs_benchmark']}")
+                print(f"     Card Cost Ratio: {perf['card_cost_vs_benchmark']}")
+                print(f"     Data Quality: {perf['data_quality_vs_benchmark']}")
+                
+                # Recommendations
+                if 'recommendations' in industry:
+                    print(f"\n📋 Industry Recommendations:")
+                    for i, rec in enumerate(industry['recommendations'], 1):
+                        print(f"   {i}. {rec}")
+            
+            # Account Type Performance
+            if 'industry_insights' in insights and 'account_type_performance' in insights['industry_insights']:
+                print(f"\n📊 Account Type Performance:")
+                for acc_type, perf in insights['industry_insights']['account_type_performance'].items():
+                    print(f"   {acc_type}:")
+                    print(f"     Count: {perf['count']} accounts")
+                    print(f"     Total Balance: ${perf['total_balance']:,.2f}")
+                    print(f"     Net Revenue: ${perf['net_revenue']:,.2f}")
+                    print(f"     Delinquency Rate: {perf['delinquency_rate']:.2%}")
     
     def _display_part2_results(self):
         """Display Part 2 results."""
