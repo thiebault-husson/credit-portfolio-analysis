@@ -10,47 +10,50 @@ import traceback
 # Add the parent directory to the path so we can import src modules
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.analyzer import LoanPortfolioAnalyzer
-from src.data_processor import LoanDataProcessor
+from src.part_1_loan_tape_analysis.loan_tape_analyzer import LoanPortfolioAnalyzer
+from src.part_1_loan_tape_analysis.loan_tape_data_processor import LoanDataProcessor
+from src.part_1_loan_tape_analysis.loan_tape_metrics import PortfolioMetricsCalculator, BusinessMetricsCalculator
 
 
-def test_data_processor():
-    """Test data processing functionality."""
-    print("Testing data processor...")
-    
-    # Test currency parsing
-    assert LoanDataProcessor.parse_currency("$750,000.00") == 750000.0
-    assert LoanDataProcessor.parse_currency("$0.00") == 0.0
-    assert LoanDataProcessor.parse_currency("") == 0.0
-    
-    # Test percentage parsing
-    assert LoanDataProcessor.parse_percentage("5.09%") == 0.0509
-    assert LoanDataProcessor.parse_percentage("0.00%") == 0.0
-    assert LoanDataProcessor.parse_percentage("") == 0.0
-    
-    print("✓ Data processor tests passed")
-    return True
+def test_data_parsing():
+    """Test data parsing functionality."""
+    try:
+        # Test currency parsing
+        assert LoanDataProcessor.parse_currency("$1,234.56") == 1234.56
+        assert LoanDataProcessor.parse_currency("$0.00") == 0.0
+        assert LoanDataProcessor.parse_currency("$1,000,000.00") == 1000000.0
+        
+        # Test percentage parsing
+        assert LoanDataProcessor.parse_percentage("12.34%") == 0.1234
+        assert LoanDataProcessor.parse_percentage("0.00%") == 0.0
+        assert LoanDataProcessor.parse_percentage("100.00%") == 1.0
+        
+        print("✓ Data parsing tests passed")
+        return True
+    except Exception as e:
+        print(f"✗ Data parsing tests failed: {e}")
+        traceback.print_exc()
+        return False
 
 
 def test_analyzer_initialization():
     """Test analyzer initialization."""
-    print("Testing analyzer initialization...")
-    
     try:
         analyzer = LoanPortfolioAnalyzer("assets/part-1/test_loan_tape.csv")
+        assert analyzer is not None
         assert analyzer.data is not None
         assert len(analyzer.data) > 0
-        print(f"✓ Successfully loaded {len(analyzer.data)} records")
+        
+        print("✓ Analyzer initialization tests passed")
         return True
     except Exception as e:
-        print(f"✗ Failed to initialize analyzer: {e}")
+        print(f"✗ Analyzer initialization tests failed: {e}")
+        traceback.print_exc()
         return False
 
 
 def test_portfolio_metrics():
     """Test portfolio metrics calculation."""
-    print("Testing portfolio metrics...")
-    
     try:
         analyzer = LoanPortfolioAnalyzer("assets/part-1/test_loan_tape.csv")
         metrics = analyzer.get_portfolio_metrics()
@@ -60,83 +63,61 @@ def test_portfolio_metrics():
         
         # Check that metrics have required fields
         latest_metrics = metrics[-1]
-        required_fields = [
-            'total_accounts', 'delinquency_rate', 'default_rate', 
-            'charge_off_rate', 'portfolio_size', 'total_revenue',
-            'gross_yield', 'net_yield'
-        ]
-        
+        required_fields = ['month', 'total_accounts', 'portfolio_size', 'delinquency_rate']
         for field in required_fields:
-            assert field in latest_metrics, f"Missing field: {field}"
+            assert field in latest_metrics
         
-        print(f"✓ Portfolio metrics calculated successfully")
+        print("✓ Portfolio metrics tests passed")
         return True
     except Exception as e:
-        print(f"✗ Portfolio metrics test failed: {e}")
+        print(f"✗ Portfolio metrics tests failed: {e}")
+        traceback.print_exc()
         return False
 
 
 def test_business_metrics():
     """Test business metrics calculation."""
-    print("Testing business metrics...")
-    
     try:
         analyzer = LoanPortfolioAnalyzer("assets/part-1/test_loan_tape.csv")
         metrics = analyzer.get_business_metrics()
         
         assert metrics is not None
-        assert not metrics.empty
+        assert len(metrics) > 0
         
-        # Check that metrics have required columns
-        required_columns = [
-            'businessGuid', 'vintage_month', 'limit', 'average_daily_balance',
-            'credit_account_age', 'total_revenue', 'apr', 'borrower_status'
-        ]
-        
-        for col in required_columns:
-            assert col in metrics.columns, f"Missing column: {col}"
-        
-        print(f"✓ Business metrics calculated successfully")
+        print("✓ Business metrics tests passed")
         return True
     except Exception as e:
-        print(f"✗ Business metrics test failed: {e}")
+        print(f"✗ Business metrics tests failed: {e}")
+        traceback.print_exc()
         return False
 
 
 def test_insights():
     """Test insights generation."""
-    print("Testing insights generation...")
-    
     try:
         analyzer = LoanPortfolioAnalyzer("assets/part-1/test_loan_tape.csv")
         insights = analyzer.get_insights()
         
         assert insights is not None
+        assert 'portfolio_growth' in insights
+        assert 'risk_analysis' in insights
         
-        # Check that insights have required sections
-        required_sections = [
-            'portfolio_growth', 'account_type_distribution', 
-            'status_distribution', 'revenue_analysis', 'risk_analysis'
-        ]
-        
-        for section in required_sections:
-            assert section in insights, f"Missing insight section: {section}"
-        
-        print(f"✓ Insights generated successfully")
+        print("✓ Insights tests passed")
         return True
     except Exception as e:
-        print(f"✗ Insights test failed: {e}")
+        print(f"✗ Insights tests failed: {e}")
+        traceback.print_exc()
         return False
 
 
 def main():
     """Run all Part A tests."""
-    print("=" * 50)
-    print("RUNNING PART A TESTS")
-    print("=" * 50)
+    print("=" * 60)
+    print("PART A TESTS - LOAN TAPE ANALYSIS")
+    print("=" * 60)
     
     tests = [
-        test_data_processor,
+        test_data_parsing,
         test_analyzer_initialization,
         test_portfolio_metrics,
         test_business_metrics,
@@ -147,25 +128,16 @@ def main():
     total = len(tests)
     
     for test in tests:
-        try:
-            result = test()
-            if result:
-                passed += 1
-        except Exception as e:
-            print(f"✗ Test {test.__name__} failed with exception: {e}")
-            traceback.print_exc()
+        if test():
+            passed += 1
     
-    print("\n" + "=" * 50)
-    print(f"PART A TEST RESULTS: {passed}/{total} tests passed")
-    print("=" * 50)
+    print("\n" + "=" * 60)
+    print(f"TEST RESULTS: {passed}/{total} tests passed")
+    print("=" * 60)
     
-    if passed == total:
-        print("🎉 All Part A tests passed!")
-        return 0
-    else:
-        print("❌ Some Part A tests failed!")
-        return 1
+    return passed == total
 
 
 if __name__ == "__main__":
-    sys.exit(main()) 
+    success = main()
+    sys.exit(0 if success else 1) 

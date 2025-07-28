@@ -1,15 +1,15 @@
 """
-Main analyzer class for loan portfolio analysis.
+Main analyzer class for loan portfolio analysis (Part 1).
 """
 
 import pandas as pd
 from typing import Dict, List, Optional
-from .data_processor import LoanDataProcessor
-from .metrics import PortfolioMetricsCalculator, BusinessMetricsCalculator
+from .loan_tape_data_processor import LoanDataProcessor
+from .loan_tape_metrics import PortfolioMetricsCalculator, BusinessMetricsCalculator
 
 
 class LoanPortfolioAnalyzer:
-    """Main class for loan portfolio analysis."""
+    """Main class for loan portfolio analysis (Part 1)."""
     
     def __init__(self, data_path: str):
         """
