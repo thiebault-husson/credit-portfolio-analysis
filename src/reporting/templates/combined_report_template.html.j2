@@ -830,6 +830,37 @@
                 </div>
             </div>
             
+            <!-- Section 1C: Portfolio Open-Ended Insights -->
+            <div class="section-group">
+                <h3>1C. Portfolio Open-Ended Insights</h3>
+                <p><strong>JTBD:</strong> Provide additional insights and recommendations for portfolio management based on the analysis.</p>
+                
+                <div class="metric-group">
+                    <h4>Key Portfolio Insights</h4>
+                    <p><strong>Based on our analysis, here are the key insights and recommendations:</strong></p>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric-group">
+                            <h5>Risk Management Insights</h5>
+                            <ul>
+                                <li><strong>Portfolio Diversification:</strong> Monitor concentration risk across business types and vintages</li>
+                                <li><strong>Vintage Performance:</strong> Track performance by account origination period</li>
+                                <li><strong>Status Distribution:</strong> Monitor account status trends for early warning signals</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="metric-group">
+                            <h5>Revenue Optimization</h5>
+                            <ul>
+                                <li><strong>Yield Management:</strong> Optimize portfolio yield through product mix</li>
+                                <li><strong>Business Growth:</strong> Identify high-performing business relationships</li>
+                                <li><strong>Account Utilization:</strong> Monitor balance/limit ratios for efficiency</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Charts Section -->
             {% if portfolio_chart %}
             <div class="chart-container">
@@ -851,19 +882,214 @@
             <h2>Part 2: Orders Data Analysis</h2>
             <p>Customer lifetime value, order patterns, and acquisition costs</p>
             
-            {% if ltv_chart %}
-            <div class="chart-container">
-                <h3>Customer Lifetime Value by Cohort</h3>
-                <div id="part2-ltv-chart"></div>
+            <!-- Section 2A: Lifetime Value (LTV) -->
+            <div class="section-group">
+                <h3>2A. Lifetime Value (LTV)</h3>
+                <p><strong>JTBD:</strong> Analyze customer lifetime value by cohort to understand long-term customer value and retention patterns.</p>
+                
+                {% if lifetime_value is defined and lifetime_value|length > 0 %}
+                <div class="metric-group">
+                    <h4>Customer Lifetime Value Analysis</h4>
+                    <p><strong>LTV metrics by customer cohort:</strong></p>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric-group">
+                            <h5>LTV Summary Statistics</h5>
+                            <table class="metrics-table">
+                                <tbody>
+                                    <tr><td>Average LTV</td><td class="metric-value">${{ "{:,.2f}".format(summary_stats.get('average_ltv', 0)|float) }}</td></tr>
+                                    <tr><td>Total Revenue</td><td class="metric-value">${{ "{:,.2f}".format(summary_stats.get('net_revenue', 0)|float) }}</td></tr>
+                                    <tr><td>Total Customers</td><td class="metric-value">{{ summary_stats.get('total_customers', 0)|int }}</td></tr>
+                                    <tr><td>Average Orders per Customer</td><td class="metric-value">{{ "{:.2f}".format(summary_stats.get('avg_orders_per_customer', 0)|float) }}</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="metric-group">
+                            <h5>LTV by Cohort</h5>
+                            {% if cohort_metrics is defined and cohort_metrics|length > 0 %}
+                            <table class="metrics-table">
+                                <thead>
+                                    <tr>
+                                        <th>Cohort Month</th>
+                                        <th>Customers</th>
+                                        <th>Total LTV</th>
+                                        <th>Average LTV</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for _, row in cohort_metrics.head(10).iterrows() %}
+                                    <tr>
+                                        <td>{{ row.get('cohort_month', 'N/A') }}</td>
+                                        <td class="metric-value">{{ row.get('customer_count', 0)|int }}</td>
+                                        <td class="metric-value">${{ "{:,.2f}".format(row.get('total_ltv', 0)|float) }}</td>
+                                        <td class="metric-value">${{ "{:,.2f}".format(row.get('avg_ltv', 0)|float) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            {% else %}
+                            <p><em>LTV cohort data not available</em></p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if ltv_chart %}
+                <div class="chart-container">
+                    <h4>LTV Trends by Cohort</h4>
+                    <div id="part2-ltv-chart"></div>
+                </div>
+                {% endif %}
             </div>
-            {% endif %}
             
-            {% if aov_chart %}
-            <div class="chart-container">
-                <h3>Average Order Value by Cohort</h3>
-                <div id="part2-aov-chart"></div>
+            <!-- Section 2B: Average Order Value (AOV) -->
+            <div class="section-group">
+                <h3>2B. Average Order Value (AOV)</h3>
+                <p><strong>JTBD:</strong> Analyze average order value patterns to understand customer spending behavior and revenue optimization opportunities.</p>
+                
+                {% if average_order_value is defined and average_order_value|length > 0 %}
+                <div class="metric-group">
+                    <h4>Average Order Value Analysis</h4>
+                    <p><strong>AOV metrics by customer cohort:</strong></p>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric-group">
+                            <h5>AOV Summary Statistics</h5>
+                            <table class="metrics-table">
+                                <tbody>
+                                    <tr><td>Average AOV</td><td class="metric-value">${{ "{:,.2f}".format(summary_stats.get('average_aov', 0)|float) }}</td></tr>
+                                    <tr><td>Total Orders</td><td class="metric-value">{{ summary_stats.get('total_orders', 0)|int }}</td></tr>
+                                    <tr><td>Total Revenue</td><td class="metric-value">${{ "{:,.2f}".format(summary_stats.get('net_revenue', 0)|float) }}</td></tr>
+                                    <tr><td>Revenue per Order</td><td class="metric-value">${{ "{:,.2f}".format(summary_stats.get('revenue_per_order', 0)|float) }}</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="metric-group">
+                            <h5>AOV by Cohort</h5>
+                            {% if cohort_metrics is defined and cohort_metrics|length > 0 %}
+                            <table class="metrics-table">
+                                <thead>
+                                    <tr>
+                                        <th>Cohort Month</th>
+                                        <th>Orders</th>
+                                        <th>Total Revenue</th>
+                                        <th>Average AOV</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for _, row in cohort_metrics.head(10).iterrows() %}
+                                    <tr>
+                                        <td>{{ row.get('cohort_month', 'N/A') }}</td>
+                                        <td class="metric-value">{{ row.get('order_count', 0)|int }}</td>
+                                        <td class="metric-value">${{ "{:,.2f}".format(row.get('total_revenue', 0)|float) }}</td>
+                                        <td class="metric-value">${{ "{:,.2f}".format(row.get('avg_aov', 0)|float) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            {% else %}
+                            <p><em>AOV cohort data not available</em></p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if aov_chart %}
+                <div class="chart-container">
+                    <h4>AOV Trends by Cohort</h4>
+                    <div id="part2-aov-chart"></div>
+                </div>
+                {% endif %}
             </div>
-            {% endif %}
+            
+            <!-- Section 2C: Customer Acquisition Cost (CAC) -->
+            <div class="section-group">
+                <h3>2C. Customer Acquisition Cost (CAC)</h3>
+                <p><strong>JTBD:</strong> Analyze customer acquisition costs by cohort to understand marketing efficiency and ROI.</p>
+                
+                {% if customer_acquisition_cost is defined and customer_acquisition_cost|length > 0 %}
+                <div class="metric-group">
+                    <h4>Customer Acquisition Cost Analysis</h4>
+                    <p><strong>CAC metrics by customer cohort:</strong></p>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric-group">
+                            <h5>CAC Summary Statistics</h5>
+                            <table class="metrics-table">
+                                <tbody>
+                                    <tr><td>Total Marketing Spend</td><td class="metric-value">${{ "{:,.2f}".format(summary_stats.get('total_marketing_spend', 0)|float) }}</td></tr>
+                                    <tr><td>Total Customers Acquired</td><td class="metric-value">{{ summary_stats.get('total_customers', 0)|int }}</td></tr>
+                                    <tr><td>Average CAC</td><td class="metric-value">${{ "{:,.2f}".format(summary_stats.get('average_cac', 0)|float) }}</td></tr>
+                                    <tr><td>LTV/CAC Ratio</td><td class="metric-value">{{ "{:.2f}".format(summary_stats.get('ltv_cac_ratio', 0)|float) }}</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="metric-group">
+                            <h5>CAC by Cohort</h5>
+                            {% if cohort_metrics is defined and cohort_metrics|length > 0 %}
+                            <table class="metrics-table">
+                                <thead>
+                                    <tr>
+                                        <th>Cohort Month</th>
+                                        <th>Marketing Spend</th>
+                                        <th>Customers Acquired</th>
+                                        <th>CAC</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for _, row in cohort_metrics.head(10).iterrows() %}
+                                    <tr>
+                                        <td>{{ row.get('cohort_month', 'N/A') }}</td>
+                                        <td class="metric-value">${{ "{:,.2f}".format(row.get('marketing_spend', 0)|float) }}</td>
+                                        <td class="metric-value">{{ row.get('customer_count', 0)|int }}</td>
+                                        <td class="metric-value">${{ "{:,.2f}".format(row.get('cac', 0)|float) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            {% else %}
+                            <p><em>CAC cohort data not available</em></p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Section 2D: Conclusion -->
+            <div class="section-group">
+                <h3>2D. Conclusion</h3>
+                <p><strong>JTBD:</strong> Summarize key insights from the orders data analysis and provide actionable recommendations.</p>
+                
+                <div class="metric-group">
+                    <h4>Key Findings and Recommendations</h4>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric-group">
+                            <h5>Customer Value Insights</h5>
+                            <ul>
+                                <li><strong>LTV Trends:</strong> Monitor lifetime value patterns by cohort for retention strategies</li>
+                                <li><strong>AOV Optimization:</strong> Focus on increasing average order value through product mix</li>
+                                <li><strong>CAC Efficiency:</strong> Track acquisition costs to optimize marketing spend</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="metric-group">
+                            <h5>Strategic Recommendations</h5>
+                            <ul>
+                                <li><strong>Cohort Analysis:</strong> Use cohort-based insights for targeted marketing</li>
+                                <li><strong>Revenue Optimization:</strong> Focus on high-value customer segments</li>
+                                <li><strong>Marketing ROI:</strong> Monitor LTV/CAC ratios for campaign effectiveness</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </section>
     </main>
 
