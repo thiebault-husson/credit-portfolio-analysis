@@ -585,11 +585,26 @@ class BusinessMetricsCalculator:
         # Add business identifier (shortened for display)
         business_vintage_metrics['businessId'] = business_vintage_metrics['businessGuid'].str[:8] + '...'
         
-        # Sort by business, vintage month (newest first), and account type
+        # Sort by business, status priority, vintage month (newest first), and account type
+        # Status priority: "Closed" > "Current" > "Delinquent" > "Default" > "ChargedOff"
+        status_priority = {
+            'Closed': 1,
+            'Current': 2,
+            'Delinquent': 3,
+            'Default': 4,
+            'ChargedOff': 5
+        }
+        
+        # Add status priority for sorting
+        business_vintage_metrics['status_priority'] = business_vintage_metrics['primaryStatus'].map(status_priority)
+        
         business_vintage_metrics = business_vintage_metrics.sort_values(
-            ['businessGuid', 'vintage_month', 'accountType'], 
-            ascending=[True, False, True]
+            ['businessGuid', 'status_priority', 'vintage_month', 'accountType'], 
+            ascending=[True, True, False, True]
         )
+        
+        # Remove the temporary status_priority column
+        business_vintage_metrics = business_vintage_metrics.drop('status_priority', axis=1)
         
         return business_vintage_metrics
     

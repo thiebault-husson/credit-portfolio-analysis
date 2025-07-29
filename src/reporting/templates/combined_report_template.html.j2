@@ -730,7 +730,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for _, row in business_metrics.head(30).iterrows() %}
+                                {% for _, row in business_metrics.iterrows() %}
                                 <tr>
                                     <td class="metric-value">{{ row.get('businessId', 'N/A') }}</td>
                                     <td>{{ row.get('vintage_month', 'N/A') }}</td>
@@ -746,7 +746,7 @@
                                 {% endfor %}
                             </tbody>
                         </table>
-                        <p class="table-note"><em>Showing first 30 business-vintage combinations. Full dataset available in detailed analysis.</em></p>
+                        <p class="table-note"><em>Showing all {{ business_metrics|length }} business-vintage combinations, ordered by status priority: Closed > Current > Delinquent > Default > ChargedOff</em></p>
                     </div>
                     
                     <!-- Business Summary Statistics -->
