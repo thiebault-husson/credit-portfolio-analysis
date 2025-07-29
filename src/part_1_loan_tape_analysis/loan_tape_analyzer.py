@@ -28,19 +28,22 @@ class LoanPortfolioAnalyzer:
                          start_date: Optional[str] = None,
                          end_date: Optional[str] = None) -> Dict:
         """
-        Run complete portfolio analysis.
+        Analyze the loan portfolio.
         
         Args:
-            start_date: Optional start date filter (YYYY-MM format)
-            end_date: Optional end date filter (YYYY-MM format)
+            start_date: Optional start date filter
+            end_date: Optional end date filter
             
         Returns:
-            Dictionary with portfolio metrics, business metrics, yield metrics, and insights
+            Dictionary with analysis results
         """
         # Calculate portfolio metrics
         self.portfolio_metrics = PortfolioMetricsCalculator.calculate_portfolio_metrics(
             self.data, start_date, end_date
         )
+        
+        # Calculate portfolio-wide rates
+        self.portfolio_wide_rates = PortfolioMetricsCalculator.calculate_portfolio_wide_rates(self.data)
         
         # Calculate business metrics
         self.business_metrics = BusinessMetricsCalculator.calculate_business_metrics(self.data)
@@ -53,6 +56,7 @@ class LoanPortfolioAnalyzer:
         
         return {
             'portfolio_metrics': self.portfolio_metrics,
+            'portfolio_wide_rates': self.portfolio_wide_rates,
             'business_metrics': self.business_metrics,
             'yield_metrics': self.yield_metrics,
             'insights': self.insights

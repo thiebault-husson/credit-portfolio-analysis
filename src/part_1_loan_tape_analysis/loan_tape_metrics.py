@@ -125,6 +125,42 @@ class PortfolioMetricsCalculator:
         
         return data
 
+    @staticmethod
+    def calculate_portfolio_wide_rates(data: pd.DataFrame) -> Dict:
+        """
+        Calculate portfolio-wide rates across all data (not just latest month).
+        
+        Args:
+            data: Preprocessed loan tape data
+            
+        Returns:
+            Dictionary with portfolio-wide rates
+        """
+        # Count total accounts and status counts across all data
+        total_accounts = len(data)
+        delinquent_accounts = len(data[data['accountEndingStatus'] == 'Delinquent'])
+        defaulted_accounts = len(data[data['accountEndingStatus'] == 'Default'])
+        charged_off_accounts = len(data[data['accountEndingStatus'] == 'ChargedOff'])
+        closed_accounts = len(data[data['accountEndingStatus'] == 'Closed'])
+        current_accounts = len(data[data['accountEndingStatus'] == 'Current'])
+        
+        # Calculate portfolio-wide rates
+        delinquency_rate = delinquent_accounts / total_accounts if total_accounts > 0 else 0
+        default_rate = defaulted_accounts / total_accounts if total_accounts > 0 else 0
+        charge_off_rate = charged_off_accounts / total_accounts if total_accounts > 0 else 0
+        
+        return {
+            'total_accounts': total_accounts,
+            'current_accounts': current_accounts,
+            'delinquent_accounts': delinquent_accounts,
+            'defaulted_accounts': defaulted_accounts,
+            'charged_off_accounts': charged_off_accounts,
+            'closed_accounts': closed_accounts,
+            'delinquency_rate': delinquency_rate,
+            'default_rate': default_rate,
+            'charge_off_rate': charge_off_rate
+        }
+
 
 class YieldMetricsCalculator:
     """

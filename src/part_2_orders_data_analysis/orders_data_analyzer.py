@@ -62,12 +62,16 @@ class OrdersAnalyzer:
         # Generate insights
         insights = self._generate_insights()
         
+        # Get summary stats
+        summary_stats = self.get_summary_stats()
+        
         return {
             'cohort_metrics': self._cohort_analysis,
             'lifetime_value': ltv_analysis,
             'average_order_value': aov_analysis,
             'customer_acquisition_cost': cac_analysis,
-            'insights': insights
+            'insights': insights,
+            'summary_stats': summary_stats
         }
     
     def _calculate_cohort_metrics(self) -> pd.DataFrame:
@@ -187,7 +191,7 @@ class OrdersAnalyzer:
     
     def _calculate_global_cac(self) -> Dict:
         """
-        Calculate global customer acquisition cost metrics (cached).
+        Calculate global customer acquisition cost (cached).
         
         Returns:
             Dictionary with global CAC metrics
@@ -318,9 +322,18 @@ class OrdersAnalyzer:
         Returns:
             Dictionary with summary statistics
         """
+        # Calculate average LTV
+        customer_ltv = self.orders_data.groupby('customer')['net_revenue'].sum()
+        average_ltv = customer_ltv.mean() if len(customer_ltv) > 0 else 0
+        
+        # Calculate average AOV
+        average_aov = self.orders_data['net_revenue'].mean()
+        
         return {
             'total_orders': len(self.orders_data),
             'total_customers': self.orders_data['customer'].nunique(),
+            'average_ltv': average_ltv,
+            'average_aov': average_aov,
             'date_range': {
                 'start': self.orders_data['created_at'].min(),
                 'end': self.orders_data['created_at'].max()
