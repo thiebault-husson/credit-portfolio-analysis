@@ -4,10 +4,8 @@ Data processor for Part 2 orders and bank transactions data.
 
 import pandas as pd
 import json
-import numpy as np
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Dict, Any
 from datetime import datetime
-from functools import lru_cache
 
 
 class OrdersDataProcessor:
@@ -71,10 +69,9 @@ class OrdersDataProcessor:
         return df
     
     @staticmethod
-    @lru_cache(maxsize=1024)
     def _extract_total_amount(line_items_str: str) -> float:
         """
-        Extract total amount from line_items JSON string (cached).
+        Extract total amount from line_items JSON string.
         
         Args:
             line_items_str: JSON string containing line items
@@ -100,7 +97,6 @@ class OrdersDataProcessor:
             return 0.0
     
     @staticmethod
-    @lru_cache(maxsize=1024)
     def _parse_refunds(value: str) -> float:
         """
         Parse refunds value - uses 'shop_amount' or 'presentment_amount'.
@@ -150,7 +146,6 @@ class OrdersDataProcessor:
             return 0.0
 
     @staticmethod
-    @lru_cache(maxsize=1024)
     def _parse_discounts(value: str) -> float:
         """
         Parse discounts value - uses 'amount' field.
@@ -202,7 +197,7 @@ class OrdersDataProcessor:
     @staticmethod
     def _robust_parse_dates(df: pd.DataFrame, column: str) -> pd.Series:
         """
-        Parse dates robustly using optimized chunked processing.
+        Parse dates robustly using chunked processing to avoid blocking.
         
         Args:
             df: DataFrame containing the data
@@ -211,46 +206,44 @@ class OrdersDataProcessor:
         Returns:
             Parsed dates as pandas Series
         """
-        # Try bulk parsing first (most efficient)
-        try:
-            result = pd.to_datetime(df[column], format='mixed', utc=True)
-            return result.dt.tz_localize(None)
-        except Exception:
-            # Fallback to chunked processing only if bulk fails
-            result = pd.Series(index=df.index, dtype='datetime64[ns]')
-            chunk_size = 2000  # Increased chunk size for better performance
+        result = pd.Series(index=df.index, dtype='datetime64[ns]')
+        chunk_size = 1000
+        
+        for i in range(0, len(df), chunk_size):
+            chunk = df.iloc[i:i+chunk_size]
             
-            for i in range(0, len(df), chunk_size):
-                chunk = df.iloc[i:i+chunk_size]
-                
-                try:
-                    chunk_dates = pd.to_datetime(chunk[column], format='mixed', utc=True)
-                    chunk_dates = chunk_dates.dt.tz_localize(None)
-                    result.iloc[i:i+len(chunk)] = chunk_dates
-                except Exception:
-                    # Individual parsing only for problematic chunks
-                    for j, date_str in enumerate(chunk[column]):
-                        try:
-                            if pd.isna(date_str) or date_str == '':
-                                result.iloc[i+j] = pd.NaT
-                            else:
-                                # Try formats in order of likelihood
-                                for fmt in ['%Y-%m-%d %H:%M:%S.%f', '%Y-%m-%d %H:%M:%S']:
-                                    try:
-                                        result.iloc[i+j] = pd.to_datetime(date_str, format=fmt)
-                                        break
-                                    except:
-                                        continue
-                                else:
-                                    try:
-                                        parsed_date = pd.to_datetime(date_str, utc=True)
-                                        result.iloc[i+j] = parsed_date.tz_localize(None) if parsed_date.tz is not None else parsed_date
-                                    except:
-                                        result.iloc[i+j] = pd.NaT
-                        except:
+            # Try bulk parsing first
+            try:
+                chunk_dates = pd.to_datetime(chunk[column], format='mixed', utc=True)
+                # Convert to timezone-naive datetime
+                chunk_dates = chunk_dates.dt.tz_localize(None)
+                result.iloc[i:i+len(chunk)] = chunk_dates
+            except Exception:
+                # Fallback to individual parsing for this chunk
+                for j, date_str in enumerate(chunk[column]):
+                    try:
+                        if pd.isna(date_str) or date_str == '':
                             result.iloc[i+j] = pd.NaT
-            
-            return result
+                        else:
+                            # Try different formats
+                            for fmt in ['%Y-%m-%d %H:%M:%S.%f', '%Y-%m-%d %H:%M:%S']:
+                                try:
+                                    result.iloc[i+j] = pd.to_datetime(date_str, format=fmt)
+                                    break
+                                except:
+                                    continue
+                            else:
+                                # If no format worked, try flexible parsing
+                                try:
+                                    parsed_date = pd.to_datetime(date_str, utc=True)
+                                    # Convert to timezone-naive datetime
+                                    result.iloc[i+j] = parsed_date.tz_localize(None) if parsed_date.tz is not None else parsed_date
+                                except:
+                                    result.iloc[i+j] = pd.NaT
+                    except:
+                        result.iloc[i+j] = pd.NaT
+        
+        return result
 
     @staticmethod
     def _extract_location(line_items_str: str) -> Dict[str, Any]:

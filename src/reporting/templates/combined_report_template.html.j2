@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Highbeam Case Study - Complete Analysis Report</title>
+    
+    <!-- Professional Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    
+    <style>
+        /* Clean Professional Report Styling - Black & White */
+        :root {
+            /* Clean Color System */
+            --primary-color: #000000;
+            --primary-dark: #1a1a1a;
+            --primary-light: #404040;
+            --secondary-color: #666666;
+            --accent-color: #333333;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            
+            /* Clean Backgrounds */
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-tertiary: #e9ecef;
+            --bg-card: #ffffff;
+            --bg-gradient: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            
+            /* Text Colors */
+            --text-primary: #000000;
+            --text-secondary: #495057;
+            --text-muted: #6c757d;
+            --text-light: #adb5bd;
+            
+            /* Clean Borders */
+            --border-color: #dee2e6;
+            --border-light: #f1f3f4;
+            
+            /* Subtle Shadows */
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1);
+            
+            /* Border Radius */
+            --radius-sm: 0.375rem;
+            --radius-md: 0.5rem;
+            --radius-lg: 0.75rem;
+            --radius-xl: 1rem;
+            
+            /* Transitions */
+            --transition-fast: 0.15s ease;
+            --transition-normal: 0.3s ease;
+            
+            /* Design System Spacing */
+            --spacing-xs: 0.5rem;
+            --spacing-sm: 1rem;
+            --spacing-md: 1.5rem;
+            --spacing-lg: 2rem;
+            --spacing-xl: 3rem;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        /* Clean Body */
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            font-size: 14px;
+            min-height: 100vh;
+        }
+
+        /* Clean Header */
+        header {
+            background: var(--bg-card);
+            padding: 2.5rem 0 2rem 0;
+            box-shadow: var(--shadow-sm);
+            border-bottom: 2px solid var(--border-color);
+            position: relative;
+            margin-bottom: 2rem;
+        }
+
+        header .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--primary-color);
+        }
+
+        header h1 {
+            margin: 0 0 0.75rem 0;
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            letter-spacing: -0.025em;
+            line-height: 1.2;
+        }
+
+        header p {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            margin: 0 0 1.5rem 0;
+            font-weight: 400;
+        }
+
+        header .meta {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        header .meta span {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            transition: var(--transition-normal);
+        }
+
+        header .meta span:hover {
+            background: var(--bg-tertiary);
+        }
+
+        header .meta span::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: var(--primary-color);
+            border-radius: 50%;
+        }
+
+        /* Main Content */
+        main {
+            max-width: 1200px;
+            margin: 0 auto 2rem auto;
+            padding: 0 2rem;
+        }
+
+        /* Clean Cards */
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 2rem;
+            padding: 2.5rem;
+            border: 1px solid var(--border-color);
+            transition: var(--transition-normal);
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        section.card h2 {
+            margin: 0 0 1.5rem 0;
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            position: relative;
+            padding-bottom: 0.75rem;
+        }
+
+        section.card h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 3rem;
+            height: 3px;
+            background: var(--primary-color);
+            border-radius: 2px;
+        }
+
+        section.card h3 {
+            color: var(--text-primary);
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin: 1.5rem 0 1rem 0;
+            letter-spacing: -0.025em;
+        }
+
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 1.5rem;
+        }
+
+        .metric-group {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition-normal);
+        }
+
+        .metric-group:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .metric-group h3 {
+            margin: 0 0 var(--spacing-sm) 0;
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: -0.025em;
+            padding-bottom: var(--spacing-xs);
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .metric-group h4 {
+            margin: 0 0 var(--spacing-sm) 0;
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: -0.025em;
+        }
+
+        .metric-group h5 {
+            margin: 0 0 var(--spacing-sm) 0;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            font-weight: 600;
+            letter-spacing: -0.025em;
+        }
+
+        .metric-group p {
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .metric-group ul {
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .metric-group li {
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        /* Clean Tables */
+        .metrics-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0;
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            font-size: 0.875rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+        }
+
+        .metric-value {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .benchmark-value {
+            font-weight: 500;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        .metrics-table th, .metrics-table td {
+            padding: 1rem 1.25rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .metrics-table th {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .metrics-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .metrics-table tr:nth-child(even) {
+            background: var(--bg-secondary);
+        }
+
+        .metrics-table tr:nth-child(odd) {
+            background: var(--bg-card);
+        }
+
+        .metrics-table tr:hover td {
+            background: var(--bg-tertiary);
+        }
+
+        /* Chart Containers */
+        .chart-container {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+        }
+
+        .chart-container > div {
+            width: 100%;
+            height: 500px;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            min-height: 500px;
+        }
+        
+        /* Ensure Plotly charts are responsive */
+        .chart-container .js-plotly-plot {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        
+        /* Chart.js canvas styling */
+        #ltv-chart-canvas {
+            width: 100% !important;
+            height: 400px !important;
+            max-height: 400px;
+        }
+
+        .chart-container svg {
+            border-radius: var(--radius-md);
+        }
+
+        /* Heatmap specific styling */
+        #account-type-heatmap {
+            width: 100%;
+            height: 600px;
+            min-height: 500px;
+            border-radius: var(--radius-md);
+            background: white;
+        }
+
+        /* Ensure heatmap container has enough space */
+        .chart-container:has(#account-type-heatmap) {
+            min-height: 650px;
+            padding: 2rem;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 2rem 0 3rem 0;
+            background: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .footer-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .print-btn, .theme-btn, .scroll-btn {
+            padding: 0.75rem 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            color: var(--text-primary);
+            font-weight: 500;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: var(--transition-normal);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .scroll-btn {
+            background: var(--primary-color);
+            color: var(--bg-card);
+            border-color: var(--primary-color);
+        }
+
+        .print-btn:hover, .theme-btn:hover, .scroll-btn:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-1px);
+        }
+
+        .print-btn:active, .theme-btn:active, .scroll-btn:active {
+            transform: translateY(0);
+        }
+
+        .watermark {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .watermark:hover {
+            color: var(--text-secondary);
+        }
+
+        .watermark strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .watermark a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .watermark a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            main {
+                padding: 0 1rem;
+            }
+
+            .card {
+                padding: 1.5rem;
+            }
+
+            header {
+                padding: 1.5rem 0 1rem 0;
+            }
+
+            header h1 {
+                font-size: 2rem;
+            }
+
+            header .meta {
+                gap: 1rem;
+            }
+
+            .overview-list,
+            .metrics-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .section-title {
+                font-size: 1.25rem;
+            }
+
+            .chart-section {
+                grid-template-columns: 1fr;
+            }
+
+            .metrics-table {
+                font-size: 0.75rem;
+            }
+
+            .metrics-table th,
+            .metrics-table td {
+                padding: 0.75rem 1rem;
+            }
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+
+            .card {
+                box-shadow: none;
+                border: 1px solid #ccc;
+            }
+
+            header {
+                box-shadow: none;
+                border-bottom: 2px solid #000;
+            }
+
+            button {
+                display: none;
+            }
+
+            .chart-block:hover,
+            .metric-group:hover {
+                transform: none;
+            }
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        button:focus,
+        a:focus {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+        }
+
+        /* Section Groups */
+        .section-group {
+            margin: var(--spacing-lg) 0;
+            padding: var(--spacing-md);
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+        }
+
+        .section-group h3 {
+            color: var(--text-primary);
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0 0 var(--spacing-sm) 0;
+            padding-bottom: var(--spacing-xs);
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        .section-group h4 {
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: var(--spacing-sm) 0 var(--spacing-xs) 0;
+        }
+
+        .section-group p {
+            color: var(--text-secondary);
+            margin: var(--spacing-xs) 0 var(--spacing-sm) 0;
+            line-height: 1.5;
+        }
+
+        .section-group ul {
+            color: var(--text-secondary);
+            margin: var(--spacing-xs) 0 var(--spacing-sm) 0;
+            padding-left: var(--spacing-md);
+        }
+
+        .section-group li {
+            margin: var(--spacing-xs) 0;
+            line-height: 1.4;
+        }
+
+        /* Table Container */
+        .table-container {
+            margin: 1rem 0;
+            overflow-x: auto;
+        }
+
+        .table-note {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-style: italic;
+            margin: 0.5rem 0 0 0;
+        }
+
+        .scrollable-table {
+            max-height: 600px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        
+        .business-table {
+            font-size: 12px;
+            line-height: 1.2;
+        }
+        
+        .business-table th,
+        .business-table td {
+            padding: 6px 8px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .business-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .business-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .business-table tbody tr:nth-child(even) {
+            background-color: #fafbfc;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>Highbeam Case Study - Complete Analysis Report</h1>
+            <p>Comprehensive analysis of lending portfolio performance and customer behavior patterns</p>
+            <div class="meta">
+                <span>Report generated: {{ report_date }}</span>
+                <span>Analysis period: Full dataset</span>
+                <span>Data sources: Loan tape, Orders, Banking transactions</span>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- Executive Summary -->
+        <section id="executive-summary" class="card">
+            <h2>Executive Summary</h2>
+            <div class="metrics-grid">
+                
+                
+                <!-- Portfolio Risk Metrics (Part 1) -->
+                <div class="metric-group">
+                    <h3>Portfolio Risk Metrics <span style="font-size: 0.8em; color: var(--text-secondary);">(Part 1)</span></h3>
+                    {% if portfolio_wide_rates %}
+                    <table class="metrics-table">
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Total Accounts</td><td class="metric-value">{{ portfolio_wide_rates.total_accounts|int }}</td></tr>
+                            <tr><td>Current Accounts</td><td class="metric-value">{{ portfolio_wide_rates.current_accounts|int }}</td></tr>
+                            <tr><td>Delinquent Accounts</td><td class="metric-value">{{ portfolio_wide_rates.delinquent_accounts|int }}</td></tr>
+                            <tr><td>Defaulted Accounts</td><td class="metric-value">{{ portfolio_wide_rates.defaulted_accounts|int }}</td></tr>
+                            <tr><td>Charged Off Accounts</td><td class="metric-value">{{ portfolio_wide_rates.charged_off_accounts|int }}</td></tr>
+                            <tr><td>Closed Accounts</td><td class="metric-value">{{ portfolio_wide_rates.closed_accounts|int }}</td></tr>
+                            <tr><td>Delinquency Rate</td><td class="metric-value">{{ "{:.2f}".format(portfolio_wide_rates.delinquency_rate|float * 100) }}%</td></tr>
+                            <tr><td>Default Rate</td><td class="metric-value">{{ "{:.2f}".format(portfolio_wide_rates.default_rate|float * 100) }}%</td></tr>
+                            <tr><td>Charge-off Rate</td><td class="metric-value">{{ "{:.2f}".format(portfolio_wide_rates.charge_off_rate|float * 100) }}%</td></tr>
+                        </tbody>
+                    </table>
+                    {% endif %}
+                </div>
+                
+                <!-- Revenue Metrics (Part 2) -->
+                {% if summary_stats %}
+                <div class="metric-group">
+                    <h3>Revenue Metrics <span style="font-size: 0.8em; color: var(--text-secondary);">(Part 2)</span></h3>
+                    <table class="metrics-table">
+                        <tbody>
+                            <tr><td>Gross Revenue</td><td class="metric-value">${{ "{:,.2f}".format(summary_stats.gross_revenue|float) }}</td></tr>
+                            <tr><td>Net Revenue</td><td class="metric-value">${{ "{:,.2f}".format(summary_stats.net_revenue|float) }}</td></tr>
+                            <tr><td>Total Refunds</td><td class="metric-value">${{ "{:,.2f}".format(summary_stats.total_refunds|float) }}</td></tr>
+                            <tr><td>Total Discounts</td><td class="metric-value">${{ "{:,.2f}".format(summary_stats.total_discounts|float) }}</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+
+                <!-- Customer Metrics (Part 2) -->
+                {% if summary_stats %}
+                <div class="metric-group">
+                    <h3>Customer Metrics <span style="font-size: 0.8em; color: var(--text-secondary);">(Part 2)</span></h3>
+                    <table class="metrics-table">
+                        <tbody>
+                            <tr><td>Total Orders</td><td class="metric-value">{{ "{:,.0f}".format(summary_stats.total_orders|int) }}</td></tr>
+                            <tr><td>Total Customers</td><td class="metric-value">{{ "{:,.0f}".format(summary_stats.total_customers|int) }}</td></tr>
+                            <tr><td>Average LTV</td><td class="metric-value">${{ "{:.2f}".format(summary_stats.average_ltv|float) }}</td></tr>
+                            <tr><td>Average AOV</td><td class="metric-value">${{ "{:.2f}".format(summary_stats.average_aov|float) }}</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+
+        <!-- Part 1: Loan Tape Analysis -->
+        <section id="part1-analysis" class="card">
+            <h2>Part 1: Loan Tape Analysis</h2>
+            <p>Portfolio performance, yield analysis, and risk metrics</p>
+            
+            <!-- Section 1A: Lending Portfolio Metrics -->
+            <div class="section-group">
+                <h3>1A. Lending Portfolio Metrics</h3>
+                <p><strong>JTBD:</strong> Our risk team is looking for a dashboard to get a pulse on the performance of our loan book. Using your preferred tools, help us calculate the following by month:</p>
+                
+                <!-- Portfolio Risk Metrics -->
+                <div class="metric-group">
+                    <h4>Portfolio Risk Metrics</h4>
+                    {% if portfolio_wide_rates %}
+                    <table class="metrics-table">
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Delinquency Rate</td><td class="metric-value">{{ "{:.2f}".format(portfolio_wide_rates.delinquency_rate|float * 100) }}%</td></tr>
+                            <tr><td>Default Rate</td><td class="metric-value">{{ "{:.2f}".format(portfolio_wide_rates.default_rate|float * 100) }}%</td></tr>
+                            <tr><td>Charge-off Rate</td><td class="metric-value">{{ "{:.2f}".format(portfolio_wide_rates.charge_off_rate|float * 100) }}%</td></tr>
+                        </tbody>
+                    </table>
+                    {% endif %}
+                </div>
+                
+                <!-- Portfolio Yield Metrics -->
+                <div class="metric-group">
+                    <h4>Portfolio Yield Metrics</h4>
+                    {% if yield_metrics %}
+                    <table class="metrics-table">
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for metric_name, metric_data in yield_metrics.items() %}
+                            {% if metric_data and metric_data is mapping %}
+                            <tr>
+                                <td>{{ metric_name.replace('_', ' ').title() }}</td>
+                                <td class="metric-value">{{ "{:.2f}".format(metric_data.get(metric_name, 0) * 100) }}%</td>
+                            </tr>
+                            {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% endif %}
+                </div>
+                
+                <!-- Why These Metrics Matter -->
+                <div class="metric-group">
+                    <h4>Why These Metrics Matter</h4>
+                    <p><strong>Portfolio Risk Metrics:</strong> These metrics provide early warning signals for portfolio health. Delinquency rates indicate payment stress, default rates show credit quality deterioration, and charge-off rates reflect actual losses. Monitoring these trends helps identify when to tighten underwriting standards or adjust risk management strategies.</p>
+                    <p><strong>Portfolio Yield Metrics:</strong> Yield metrics measure the profitability of the loan portfolio. They help assess pricing effectiveness, identify revenue optimization opportunities, and ensure the portfolio generates adequate returns relative to risk. These metrics are essential for strategic decision-making around product pricing and portfolio management.</p>
+                </div>
+                
+                <!-- Additional Portfolio Metrics -->
+                <div class="metric-group">
+                    <h4>Additional Portfolio Metrics</h4>
+                    <p><strong>Are there any other metrics you'd recommend tracking?</strong></p>
+                    <p>Yes, I recommend implementing <strong>time-based rolling metrics</strong> to monitor portfolio health trends and enable proactive risk management:</p>
+                    
+                    <div class="metric-group">
+                        <h4>Rolling Risk Metrics</h4>
+                        <ul>
+                            <li><strong>Rolling Delinquency Rate:</strong> 3-month and 6-month rolling averages to spot early deterioration trends</li>
+                            <li><strong>Rolling Default Rate:</strong> Track default patterns over time to identify portfolio stress</li>
+                            <li><strong>Rolling Charge-off Rate:</strong> Monitor loss trends to adjust underwriting and pricing strategies</li>
+                        </ul>
+                        <p><em>Recommended visualization: Line graphs with rolling windows to identify trend changes and seasonal patterns.</em></p>
+                    </div>
+                    
+                    <div class="metric-group">
+                        <h4>Early Warning System</h4>
+                        <p>These rolling metrics help:</p>
+                        <ul>
+                            <li><strong>Proactively tighten underwriting</strong> before portfolio performance degrades</li>
+                            <li><strong>Adjust pricing strategies</strong> based on risk trend analysis</li>
+                            <li><strong>Slow lending growth</strong> when risk metrics indicate stress</li>
+                            <li><strong>Identify seasonal patterns</strong> in portfolio performance</li>
+                        </ul>
+                    </div>
+                    
+                    <p><strong>Portfolio Impact:</strong> These rolling metrics help determine where to prioritize risk management efforts, optimize underwriting strategies, and identify early warning signals for portfolio stress.</p>
+                    
+                    <ul>
+                        <li><strong>Portfolio Concentration Risk:</strong> Monitor exposure to specific account types or vintage periods</li>
+                        <li><strong>Payment Rate:</strong> Track the rate at which borrowers make payments on their accounts</li>
+                        <li><strong>Utilization Rate:</strong> Measure how much of available credit is being used</li>
+                        <li><strong>Portfolio Aging:</strong> Understand the maturity profile of the loan book</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Section 1B: Portfolio Metrics by Business -->
+            <div class="section-group">
+                <h3>1B. Portfolio Metrics by Business</h3>
+                <p><strong>JTBD:</strong> Now that we understand overall portfolio performance, help us build a dashboard that shows performance per business, grouped by monthly vintage (i.e. the month each credit account was opened):</p>
+                
+                {% if business_metrics is defined and business_metrics|length > 0 %}
+                <div class="metric-group">
+                    <h4>Business-Level Portfolio Dashboard by Vintage</h4>
+                    <p><strong>Total records: {{ business_metrics|length }} business-vintage combinations</strong></p>
+                    <p><strong>Metrics tracked per business by monthly vintage:</strong></p>
+                    <ul>
+                        <li><strong>Total Limit:</strong> Sum of credit limits for all accounts in vintage</li>
+                        <li><strong>Total Average Daily Balance:</strong> Sum of average daily balances</li>
+                        <li><strong>Average Account Age:</strong> Mean age of accounts in months</li>
+                        <li><strong>Total Revenue:</strong> Sum of interest + interchange fees</li>
+                        <li><strong>Average APR:</strong> Mean APR across accounts</li>
+                        <li><strong>Primary Status:</strong> Most common status in vintage</li>
+                        <li><strong>Account Count:</strong> Number of accounts in vintage</li>
+                    </ul>
+                    
+                    <div class="scrollable-table">
+                        <table class="metrics-table business-table">
+                            <thead>
+                                <tr>
+                                    <th>Business ID</th>
+                                    <th>Vintage Month</th>
+                                    <th>Product Type(s)</th>
+                                    <th>Total Limit</th>
+                                    <th>Total Balance</th>
+                                    <th>Avg Age (months)</th>
+                                    <th>Total Revenue</th>
+                                    <th>Avg APR</th>
+                                    <th>Primary Status</th>
+                                    <th>Account Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for _, row in business_metrics.iterrows() %}
+                                <tr>
+                                    <td class="metric-value">{{ row.get('businessId', 'N/A') }}</td>
+                                    <td>{{ row.get('vintage_month', 'N/A') }}</td>
+                                    <td class="metric-value">{{ row.get('accountTypes', 'N/A') }}</td>
+                                    <td class="metric-value">${{ "{:,.0f}".format(row.get('totalLimit', 0)|float) }}</td>
+                                    <td class="metric-value">${{ "{:,.0f}".format(row.get('totalAverageDailyBalance', 0)|float) }}</td>
+                                    <td class="metric-value">{{ "{:.1f}".format(row.get('avgAccountAge', 0)|float) }}</td>
+                                    <td class="metric-value">${{ "{:,.0f}".format(row.get('totalRevenue', 0)|float) }}</td>
+                                    <td class="metric-value">{{ "{:.2f}".format(row.get('avgAPR', 0)|float) }}%</td>
+                                    <td class="metric-value">{{ row.get('primaryStatus', 'N/A') }}</td>
+                                    <td class="metric-value">{{ row.get('accountCount', 0)|int }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        <p class="table-note"><em>Showing all {{ business_metrics|length }} business-vintage combinations, ordered by status priority: Closed > Current > Delinquent > Default > ChargedOff</em></p>
+                    </div>
+                </div>
+                
+                <!-- Why These Metrics Matter -->
+                <div class="metric-group">
+                    <h4>Why These Metrics Matter</h4>
+                    <p><strong>Business-Level Portfolio Dashboard:</strong> This dashboard provides granular insights into portfolio performance by business and vintage. It helps identify high-performing business relationships, track portfolio maturation patterns, and spot early warning signs of deterioration. Understanding vintage performance is crucial for credit risk management and strategic portfolio decisions.</p>
+                    <p><strong>Vintage Analysis:</strong> By grouping accounts by origination month, we can track how different cohorts perform over time. This helps assess underwriting quality, identify seasonal patterns, and make data-driven decisions about credit policies and risk management strategies.</p>
+                </div>
+                {% endif %}
+                
+                <!-- Additional Business Metrics -->
+                <div class="metric-group">
+                    <h4>Additional Business Metrics</h4>
+                    <p><strong>Are there any other metrics you'd recommend tracking?</strong></p>
+                    <p>Yes, I recommend implementing <strong>product-type and customer-level segmentation metrics</strong> to optimize portfolio performance and marketing strategies:</p>
+                    
+                    <div class="metric-group">
+                        <h4>Product-Type Segmentation</h4>
+                        <ul>
+                            <li><strong>Total Balance and Total Limit per Product Type:</strong> Monitor exposure and utilization by product category</li>
+                            <li><strong>Revenue-weighted APR per Product Type:</strong> Track pricing effectiveness across different products</li>
+                            <li><strong>Customer Count per Product Type:</strong> Understand product adoption and market penetration</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="metric-group">
+                        <h4>Customer-Level Segmentation</h4>
+                        <ul>
+                            <li><strong>Segmentation by Customer Tenure:</strong> Analyze performance differences between new vs. established customers</li>
+                            <li><strong>Risk Tier Segmentation:</strong> Track performance across different risk categories</li>
+                            <li><strong>Channel of Acquisition:</strong> Compare performance by acquisition source (direct, partner, etc.)</li>
+                        </ul>
+                    </div>
+                    
+                    <p><strong>Business Impact:</strong> These segmentation metrics help determine where to prioritize acquisition efforts, optimize marketing spend allocation, and identify top-performing customer segments for targeted growth strategies.</p>
+                    
+                    <ul>
+                        <li><strong>Business Concentration Risk:</strong> Monitor exposure to specific businesses</li>
+                        <li><strong>Revenue per Business:</strong> Identify high-value business relationships</li>
+                        <li><strong>Account Utilization:</strong> Balance/Limit ratio per business</li>
+                        <li><strong>Business Growth:</strong> Track account growth over time per business</li>
+                        <li><strong>Risk Distribution:</strong> Status distribution across businesses</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Section 1C: Portfolio Open-Ended Insights -->
+            <div class="section-group">
+                <h3>1C. Portfolio Open-Ended Insights</h3>
+                <p><strong>JTBD:</strong> Provide additional insights and recommendations for portfolio management based on the analysis.</p>
+                
+                <div class="metric-group">
+                    <h4>Key Portfolio-Level Metrics</h4>
+                    <p><strong>Based on our analysis, here are the high-value portfolio-level metrics for comprehensive risk and performance monitoring:</strong></p>
+                    
+                    <div class="metric-group">
+                        <h4>Core Credit Modeling Metrics</h4>
+                        <ul>
+                            <li><strong>PD (Probability of Default):</strong> Likelihood a borrower will default over a set time horizon. <em>Essential for risk-based pricing and provisioning.</em></li>
+                            <li><strong>LGD (Loss Given Default):</strong> Percentage of exposure lost after default (1 – recovery rate). <em>Helps estimate actual financial loss from defaults.</em></li>
+                            <li><strong>EAD (Exposure at Default):</strong> Expected outstanding balance at time of default. <em>Needed to calculate expected loss (EL = PD × LGD × EAD).</em></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="metric-group">
+                        <h4>Portfolio Performance Metrics</h4>
+                        <ul>
+                            <li><strong>Vintage Loss Rate:</strong> Cumulative loss percentage for loans originated in a given month/quarter. <em>Helps track portfolio quality over time.</em></li>
+                            <li><strong>Utilization Rate:</strong> Balance ÷ Credit Limit. <em>Indicates how much credit customers are actively using; useful for identifying risk or growth potential.</em></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="metric-group">
+                        <h4>Risk Management Insights</h4>
+                        <ul>
+                            <li><strong>Portfolio Diversification:</strong> Monitor concentration risk across business types and vintages</li>
+                            <li><strong>Status Distribution:</strong> Monitor account status trends for early warning signals</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="metric-group">
+                        <h4>Revenue Optimization</h4>
+                        <ul>
+                            <li><strong>Yield Management:</strong> Optimize portfolio yield through product mix</li>
+                            <li><strong>Business Growth:</strong> Identify high-performing business relationships</li>
+                            <li><strong>Account Utilization:</strong> Monitor balance/limit ratios for efficiency</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+
+        </section>
+
+        <!-- Part 2: Orders Data Analysis -->
+        <section id="part2-analysis" class="card">
+            <h2>Part 2: Orders Data Analysis</h2>
+            <p>Customer lifetime value, order patterns, and acquisition costs</p>
+            
+            <!-- Section 2A: Lifetime Value (LTV) -->
+            <div class="section-group">
+                <h3>2A. Lifetime Value (LTV)</h3>
+                <p><strong>JTBD:</strong> Analyze customer lifetime value by cohort to understand long-term customer value and retention patterns.</p>
+                
+                {% if lifetime_value is defined and lifetime_value|length > 0 %}
+                <div class="metric-group">
+                    <h4>Customer Lifetime Value Analysis</h4>
+                    <p><strong>LTV metrics by customer cohort:</strong></p>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric-group">
+                            <h5>LTV Summary Statistics</h5>
+                            <table class="metrics-table">
+                                <tbody>
+                                    <tr><td>Total Revenue</td><td class="metric-value">${{ "{:,.2f}".format(summary_stats.get('net_revenue', 0)|float) }}</td></tr>
+                                    <tr><td>Total Customers</td><td class="metric-value">{{ summary_stats.get('total_customers', 0)|int }}</td></tr>
+                                    <tr><td>Total Number Orders</td><td class="metric-value">{{ summary_stats.get('total_orders', 0)|int }}</td></tr>
+                                    <tr><td>Average LTV</td><td class="metric-value">${{ "{:,.2f}".format(summary_stats.get('average_ltv', 0)|float) }}</td></tr>
+                                    <tr><td>Average Orders per Customer</td><td class="metric-value">{{ "{:.2f}".format(summary_stats.get('avg_orders_per_customer', 0)|float) }}</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="metric-group">
+                            <h5>LTV by Cohort</h5>
+                            {% if cohort_metrics is defined and cohort_metrics|length > 0 %}
+                            <table class="metrics-table">
+                                <thead>
+                                    <tr>
+                                        <th>Cohort Month</th>
+                                        <th>Average LTV</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for _, row in cohort_metrics.iterrows() %}
+                                    <tr>
+                                        <td>{{ row.get('cohort_month', 'N/A') }}</td>
+                                        <td class="metric-value">${{ "{:,.2f}".format(row.get('avg_ltv', 0)|float) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            {% else %}
+                            <p><em>LTV cohort data not available</em></p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+
+            </div>
+            
+            <!-- Section 2B: Average Order Value (AOV) -->
+            <div class="section-group">
+                <h3>2B. Average Order Value (AOV)</h3>
+                <p><strong>JTBD:</strong> Analyze average order value patterns to understand customer spending behavior and revenue optimization opportunities.</p>
+                
+                {% if average_order_value is defined and average_order_value|length > 0 %}
+                <div class="metric-group">
+                    <h4>Average Order Value Analysis</h4>
+                    <p><strong>AOV metrics by customer cohort:</strong></p>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric-group">
+                            <h5>AOV Summary Statistics</h5>
+                            <table class="metrics-table">
+                                <tbody>
+                                    <tr><td>Total Revenue</td><td class="metric-value">${{ "{:,.2f}".format(summary_stats.get('net_revenue', 0)|float) }}</td></tr>
+                                    <tr><td>Total Orders</td><td class="metric-value">{{ summary_stats.get('total_orders', 0)|int }}</td></tr>
+                                    <tr><td>Average AOV</td><td class="metric-value">${{ "{:,.2f}".format(summary_stats.get('average_aov', 0)|float) }}</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="metric-group">
+                            <h5>AOV by Cohort</h5>
+                            {% if cohort_metrics is defined and cohort_metrics|length > 0 %}
+                            <table class="metrics-table">
+                                <thead>
+                                    <tr>
+                                        <th>Cohort Month</th>
+                                        <th>Average AOV</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for _, row in cohort_metrics.iterrows() %}
+                                    <tr>
+                                        <td>{{ row.get('cohort_month', 'N/A') }}</td>
+                                        <td class="metric-value">${{ "{:,.2f}".format(row.get('avg_aov', 0)|float) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            {% else %}
+                            <p><em>AOV cohort data not available</em></p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+
+            </div>
+            
+            <!-- Section 2C: Customer Acquisition Cost (CAC) -->
+            <div class="section-group">
+                <h3>2C. Customer Acquisition Cost (CAC)</h3>
+                <p><strong>JTBD:</strong> Analyze customer acquisition costs by cohort to understand marketing efficiency and ROI.</p>
+                
+                {% if customer_acquisition_cost is defined and customer_acquisition_cost|length > 0 %}
+                <div class="metric-group">
+                    <h4>Customer Acquisition Cost Analysis</h4>
+                    <p><strong>CAC metrics by customer cohort:</strong></p>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric-group">
+                            <h5>CAC Summary Statistics</h5>
+                            <table class="metrics-table">
+                                <tbody>
+                                    <tr><td>Total Marketing Spend</td><td class="metric-value">${{ "{:,.2f}".format(summary_stats.get('total_marketing_spend', 0)|float) }}</td></tr>
+                                    <tr><td>Total Customers Acquired</td><td class="metric-value">{{ summary_stats.get('total_customers', 0)|int }}</td></tr>
+                                    <tr><td>Average CAC</td><td class="metric-value">${{ "{:,.2f}".format(summary_stats.get('average_cac', 0)|float) }}</td></tr>
+                                    <tr><td>LTV/CAC Ratio</td><td class="metric-value">{{ "{:.2f}".format(summary_stats.get('ltv_cac_ratio', 0)|float) }}</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="metric-group">
+                            <h5>CAC by Cohort</h5>
+                            {% if customer_acquisition_cost is defined and customer_acquisition_cost.by_cohort|length > 0 %}
+                            <table class="metrics-table">
+                                <thead>
+                                    <tr>
+                                        <th>Cohort Month</th>
+                                        <th>CAC</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for cohort_data in customer_acquisition_cost.by_cohort %}
+                                    <tr>
+                                        <td>{{ cohort_data.get('cohort_month', 'N/A') }}</td>
+                                        <td class="metric-value">${{ "{:,.2f}".format(cohort_data.get('cac', 0)|float) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            {% else %}
+                            <p><em>CAC cohort data not available</em></p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Section 2D: Lending Decision & Business Performance Conclusion -->
+            <div class="section-group">
+                <h3>2D. Lending Decision & Business Performance Conclusion</h3>
+                <p><strong>JTBD:</strong> Based on the analysis from Sections 2A, 2B, and 2C, evaluate this business as a lending candidate and provide actionable insights for credit decision-making.</p>
+                
+                <!-- Conclusion: Business Performance & Lending Decision -->
+                <div class="metric-group">
+                    <h4>Conclusion: Business Performance & Lending Decision</h4>
+                    <p><strong>Business Evolution Analysis:</strong> Based on the comprehensive analysis of customer lifetime value, order patterns, and acquisition costs, this business demonstrates {{ "strong" if summary_stats.get('average_ltv', 0) > 250 else "moderate" }} growth potential with {{ "favorable" if summary_stats.get('ltv_cac_ratio', 0) > 1.0 else "concerning" }} unit economics.</p>
+                    
+                    <p><strong>Key Strengths:</strong> The business shows {{ "excellent" if summary_stats.get('total_customers', 0) > 50000 else "good" }} customer acquisition with {{ "{:,.0f}".format(summary_stats.get('total_customers', 0)) }} total customers and {{ "{:,.0f}".format(summary_stats.get('total_orders', 0)) }} orders, indicating {{ "strong" if summary_stats.get('avg_orders_per_customer', 0) > 1.5 else "moderate" }} customer engagement. The average LTV of ${{ "{:.2f}".format(summary_stats.get('average_ltv', 0)) }} and LTV/CAC ratio of {{ "{:.2f}".format(summary_stats.get('ltv_cac_ratio', 0)) }} suggest {{ "profitable" if summary_stats.get('ltv_cac_ratio', 0) > 1.0 else "challenging" }} customer economics.</p>
+                    
+                    <p><strong>Risk Assessment:</strong> {{ "Customer concentration appears manageable" if summary_stats.get('total_customers', 0) > 50000 else "Customer concentration may be a concern" }} with {{ "{:,.0f}".format(summary_stats.get('total_customers', 0)) }} customers across {{ "{:,.0f}".format(summary_stats.get('number_of_cohorts', 0)) }} cohorts. The {{ "stable" if summary_stats.get('average_aov', 0) > 150 else "volatile" }} average order value of ${{ "{:.2f}".format(summary_stats.get('average_aov', 0)) }} indicates {{ "consistent" if summary_stats.get('average_aov', 0) > 150 else "variable" }} revenue patterns.</p>
+                    
+                    <p><strong>Lending Recommendation:</strong> {{ "This business appears to be a good lending candidate" if summary_stats.get('ltv_cac_ratio', 0) > 1.0 and summary_stats.get('total_customers', 0) > 50000 else "This business requires careful consideration" }} due to {{ "strong unit economics and customer base" if summary_stats.get('ltv_cac_ratio', 0) > 1.0 else "mixed performance indicators" }}. {{ "Recommend approval with standard terms" if summary_stats.get('ltv_cac_ratio', 0) > 1.0 else "Recommend additional due diligence" }} based on the current performance metrics.</p>
+                </div>
+                
+                <!-- Lending Assessment – Key Factors to Consider -->
+                <div class="metric-group">
+                    <h4>Lending Assessment – Key Factors to Consider</h4>
+                    
+                    <div class="metric-group">
+                        <h4>Positive Signals</h4>
+                        <ul>
+                            <li><strong>Strong Customer Base:</strong> {{ "{:,.0f}".format(summary_stats.get('total_customers', 0)) }} customers with {{ "{:,.0f}".format(summary_stats.get('total_orders', 0)) }} total orders</li>
+                            <li><strong>Profitable Unit Economics:</strong> LTV/CAC ratio of {{ "{:.2f}".format(summary_stats.get('ltv_cac_ratio', 0)) }} indicates {{ "strong" if summary_stats.get('ltv_cac_ratio', 0) > 1.0 else "moderate" }} customer profitability</li>
+                            <li><strong>Diversified Revenue:</strong> {{ "{:,.0f}".format(summary_stats.get('total_revenue', 0)) }} in total revenue across {{ "{:,.0f}".format(summary_stats.get('number_of_cohorts', 0)) }} cohorts</li>
+                            <li><strong>Stable Operations:</strong> {{ "{:.2f}".format(summary_stats.get('avg_orders_per_customer', 0)) }} average orders per customer shows {{ "strong" if summary_stats.get('avg_orders_per_customer', 0) > 1.5 else "moderate" }} customer engagement</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="metric-group">
+                        <h4>Risk Factors</h4>
+                        <ul>
+                            <li><strong>Customer Concentration:</strong> {{ "Monitor" if summary_stats.get('total_customers', 0) < 100000 else "Manage" }} customer concentration risk with current customer base</li>
+                            <li><strong>Revenue Volatility:</strong> {{ "Track" if summary_stats.get('average_aov', 0) < 200 else "Monitor" }} order value fluctuations across cohorts</li>
+                            <li><strong>Marketing Efficiency:</strong> {{ "Optimize" if summary_stats.get('ltv_cac_ratio', 0) < 1.5 else "Maintain" }} marketing spend allocation based on CAC trends</li>
+                            <li><strong>Growth Sustainability:</strong> {{ "Assess" if summary_stats.get('number_of_cohorts', 0) < 20 else "Monitor" }} long-term growth patterns and cohort performance</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Additional Business Performance Metrics Recommended -->
+                <div class="metric-group">
+                    <h4>Additional Business Performance Metrics Recommended</h4>
+                    <p><strong>Are there any other metrics you'd recommend tracking?</strong></p>
+                    <p>Yes, I recommend implementing <strong>rolling performance metrics and custom business ratios</strong> to enhance credit decision-making and risk assessment:</p>
+                    
+                    <div class="metric-group">
+                        <h4>Rolling Performance Metrics</h4>
+                        <ul>
+                            <li><strong>Rolling GMV:</strong> Monthly/quarterly moving average of gross merchandise value. <em>Critical for assessing revenue stability and growth trends.</em></li>
+                            <li><strong>Rolling Order Volume:</strong> Moving average of monthly order counts. <em>Indicates business activity levels and operational capacity.</em></li>
+                            <li><strong>Rolling Active Customers:</strong> Count of unique customers with transactions in rolling periods. <em>Shows customer retention and engagement patterns.</em></li>
+                            <li><strong>Rolling Repeat Purchase Rate:</strong> Percentage of customers making repeat purchases in rolling windows. <em>Measures customer loyalty and product satisfaction.</em></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="metric-group">
+                        <h4>Custom Business Ratios</h4>
+                        <ul>
+                            <li><strong>Average Order Value (AOV):</strong> GMV ÷ Number of Orders. <em>Indicates pricing strategy effectiveness and customer spending patterns.</em></li>
+                            <li><strong>Repeat Purchase Rate:</strong> Returning Customers ÷ Total Customers. <em>Measures customer retention and product-market fit.</em></li>
+                            <li><strong>Revenue Concentration Ratio:</strong> % of GMV from top 3 customers or products. <em>Assesses diversification risk and customer dependency.</em></li>
+                            <li><strong>GMV Growth Rate:</strong> (GMV_t – GMV_t-1) ÷ GMV_t-1. <em>Shows business momentum and growth sustainability.</em></li>
+                            <li><strong>Monthly Active Customers:</strong> Count of distinct customers with transactions per month. <em>Indicates customer engagement and business activity levels.</em></li>
+                        </ul>
+                    </div>
+                    
+                    <p><strong>Credit Decision Impact:</strong> These metrics provide early warning signals for business health, help assess repayment capacity, and enable proactive risk management for lending decisions.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-buttons">
+            <button onclick="window.print()" class="print-btn">📄 Download PDF</button>
+            <button onclick="scrollToTop()" class="scroll-btn">⬆️ Back to Top</button>
+        </div>
+        <div class="watermark">
+            <span>Created by <strong>Thiebault Husson</strong></span>
+            <span>•</span>
+            <span><a href="mailto:husson.thiebault@gmail.com" style="color: var(--text-secondary); text-decoration: none;">husson.thiebault@gmail.com</a></span>
+            <span>•</span>
+            <span><a href="https://github.com/thiebault-husson" target="_blank" style="color: var(--text-secondary); text-decoration: none;">@thiebault-husson</a></span>
+            <span>•</span>
+            <span>Generated on {{ report_date }}</span>
+        </div>
+    </footer>
+
+    <!-- JavaScript for Charts and Interactions -->
+    <script>
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Scroll to top function
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+
+        // Charts
+        {% if portfolio_chart %}
+        Plotly.newPlot('part1-portfolio-chart', JSON.parse('{{ portfolio_chart | safe }}'));
+        {% endif %}
+        
+        {% if yield_chart %}
+        Plotly.newPlot('part1-yield-chart', JSON.parse('{{ yield_chart | safe }}'));
+        {% endif %}
+        
+
+        
+        // Heatmap is now HTML-based, no JavaScript needed
+    </script>
+</body>
+</html> 
