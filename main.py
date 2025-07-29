@@ -109,7 +109,8 @@ Examples:
             'part2_data': part2_results,
             'part1_charts': {
                 'portfolio_metrics': report_generator._create_portfolio_metrics_chart(part1_results['portfolio_metrics']),
-                'yield_metrics': report_generator._create_yield_metrics_chart(part1_results['yield_metrics'])
+                'yield_metrics': report_generator._create_yield_metrics_chart(part1_results['yield_metrics']),
+                'account_type_heatmap': report_generator._create_account_type_heatmap(part1_results['business_metrics'])
             },
             'part2_charts': {
                 'ltv_by_cohort': report_generator._create_ltv_by_cohort_chart(part2_results['lifetime_value']),

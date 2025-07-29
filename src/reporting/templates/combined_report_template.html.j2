@@ -523,6 +523,40 @@
             font-style: italic;
             margin: 0.5rem 0 0 0;
         }
+
+        .scrollable-table {
+            max-height: 600px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        
+        .business-table {
+            font-size: 12px;
+            line-height: 1.2;
+        }
+        
+        .business-table th,
+        .business-table td {
+            padding: 6px 8px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .business-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .business-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .business-table tbody tr:nth-child(even) {
+            background-color: #fafbfc;
+        }
     </style>
 </head>
 <body>
@@ -713,13 +747,13 @@
                         <li><strong>Account Count:</strong> Number of accounts in vintage</li>
                     </ul>
                     
-                    <div class="table-container">
-                        <table class="metrics-table">
+                    <div class="scrollable-table">
+                        <table class="metrics-table business-table">
                             <thead>
                                 <tr>
                                     <th>Business ID</th>
                                     <th>Vintage Month</th>
-                                    <th>Account Type</th>
+                                    <th>Product Type(s)</th>
                                     <th>Total Limit</th>
                                     <th>Total Balance</th>
                                     <th>Avg Age (months)</th>
@@ -734,7 +768,7 @@
                                 <tr>
                                     <td class="metric-value">{{ row.get('businessId', 'N/A') }}</td>
                                     <td>{{ row.get('vintage_month', 'N/A') }}</td>
-                                    <td>{{ row.get('accountType', 'N/A') }}</td>
+                                    <td class="metric-value">{{ row.get('accountTypes', 'N/A') }}</td>
                                     <td class="metric-value">${{ "{:,.0f}".format(row.get('totalLimit', 0)|float) }}</td>
                                     <td class="metric-value">${{ "{:,.0f}".format(row.get('totalAverageDailyBalance', 0)|float) }}</td>
                                     <td class="metric-value">{{ "{:.1f}".format(row.get('avgAccountAge', 0)|float) }}</td>
@@ -772,13 +806,9 @@
                             
                             <div class="metric-group">
                                 <h5>Account Type Distribution</h5>
-                                <table class="metrics-table">
-                                    <tbody>
-                                        {% for account_type, count in business_metrics['accountType'].value_counts().items() %}
-                                        <tr><td>{{ account_type }}</td><td class="metric-value">{{ count|int }}</td></tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
+                                <div class="chart-container">
+                                    <div id="account-type-heatmap"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -888,6 +918,10 @@
         
         {% if aov_chart %}
         Plotly.newPlot('part2-aov-chart', {{ aov_chart | safe }});
+        {% endif %}
+        
+        {% if account_type_heatmap %}
+        Plotly.newPlot('account-type-heatmap', {{ account_type_heatmap | safe }});
         {% endif %}
     </script>
 </body>

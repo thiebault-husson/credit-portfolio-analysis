@@ -558,34 +558,35 @@ class BusinessMetricsCalculator:
         df['limit'] = df['accountDailyAveragePrincipalBalance'] * 1.2  # Estimate limit as 120% of balance
         
         # Group by business and vintage month, then aggregate metrics
-        business_vintage_metrics = df.groupby(['businessGuid', 'vintage_month', 'accountType']).agg({
+        business_vintage_metrics = df.groupby(['businessGuid', 'vintage_month']).agg({
             'limit': 'sum',
             'accountDailyAveragePrincipalBalance': 'sum',
             'accountAge': 'mean',
             'revenue': 'sum',
             'apr': 'mean',
             'status': lambda x: x.mode().iloc[0] if len(x.mode()) > 0 else 'Unknown',
-            'capitalAccountGuid': 'count'
+            'capitalAccountGuid': 'count',
+            'accountType': lambda x: ', '.join(x.unique())  # Show all account types
         }).reset_index()
         
         # Rename columns for clarity
         business_vintage_metrics.columns = [
             'businessGuid',
             'vintage_month',
-            'accountType',
             'totalLimit',
             'totalAverageDailyBalance',
             'avgAccountAge',
             'totalRevenue',
             'avgAPR',
             'primaryStatus',
-            'accountCount'
+            'accountCount',
+            'accountTypes'
         ]
         
         # Add business identifier (shortened for display)
         business_vintage_metrics['businessId'] = business_vintage_metrics['businessGuid'].str[:8] + '...'
         
-        # Sort by business, status priority, vintage month (newest first), and account type
+        # Sort by business, status priority, vintage month (newest first)
         # Status priority: "Closed" > "Current" > "Delinquent" > "Default" > "ChargedOff"
         status_priority = {
             'Closed': 1,
@@ -599,8 +600,8 @@ class BusinessMetricsCalculator:
         business_vintage_metrics['status_priority'] = business_vintage_metrics['primaryStatus'].map(status_priority)
         
         business_vintage_metrics = business_vintage_metrics.sort_values(
-            ['businessGuid', 'status_priority', 'vintage_month', 'accountType'], 
-            ascending=[True, True, False, True]
+            ['businessGuid', 'status_priority', 'vintage_month'], 
+            ascending=[True, True, False]
         )
         
         # Remove the temporary status_priority column

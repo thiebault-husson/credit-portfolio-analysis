@@ -61,7 +61,8 @@ class HTMLReportGenerator:
             'portfolio_chart': part1_charts.get('portfolio_metrics', {}),
             'yield_chart': part1_charts.get('yield_metrics', {}),
             'ltv_chart': part2_charts.get('ltv_by_cohort', {}),
-            'aov_chart': part2_charts.get('aov_by_cohort', {})
+            'aov_chart': part2_charts.get('aov_by_cohort', {}),
+            'account_type_heatmap': part1_charts.get('account_type_heatmap', {})
         }
         
         # Render template
@@ -272,3 +273,55 @@ class HTMLReportGenerator:
         )
         
         return fig.to_dict() 
+
+    def _create_account_type_heatmap(self, business_metrics: pd.DataFrame) -> Dict:
+        """
+        Create an interactive heatmap for account type distribution.
+        
+        Args:
+            business_metrics: Business metrics DataFrame
+            
+        Returns:
+            Dictionary with heatmap data
+        """
+        if business_metrics.empty:
+            return {}
+        
+        try:
+            # Parse account types from the accountTypes column
+            account_types_list = []
+            for account_types_str in business_metrics['accountTypes']:
+                if pd.notna(account_types_str) and isinstance(account_types_str, str):
+                    types = [t.strip() for t in account_types_str.split(',')]
+                    account_types_list.extend(types)
+            
+            if not account_types_list:
+                return {}
+            
+            # Count account types
+            account_type_counts = pd.Series(account_types_list).value_counts()
+            
+            # Create heatmap using plotly.graph_objects
+            fig = go.Figure(data=go.Heatmap(
+                z=[[int(v) for v in account_type_counts.values]],
+                x=['Account Types'],
+                y=[str(k) for k in account_type_counts.index],
+                colorscale='Viridis',
+                showscale=True,
+                text=[[str(int(val)) for val in account_type_counts.values]],
+                texttemplate='%{text}',
+                textfont={'size': 12}
+            ))
+            
+            fig.update_layout(
+                title='Account Type Distribution Heatmap',
+                xaxis_title='Categories',
+                yaxis_title='Account Types',
+                height=400,
+                margin={'l': 100, 'r': 50, 't': 50, 'b': 50}
+            )
+            
+            return fig.to_dict()
+        except Exception as e:
+            print(f"Error creating account type heatmap: {e}")
+            return {} 

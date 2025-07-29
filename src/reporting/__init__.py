@@ -1,9 +1,5 @@
 """
-Reporting Package
-
-This package contains modules for generating various types of reports
-including HTML reports, console output, and data visualizations.
+Reporting module for generating HTML reports.
 """
-
-# TODO: Add HTML report generator and other reporting modules
-__all__ = [] 
+ 
+__version__ = "0.1.0" 
