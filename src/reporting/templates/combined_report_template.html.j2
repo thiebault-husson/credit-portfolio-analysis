@@ -645,20 +645,7 @@
         <section id="executive-summary" class="card">
             <h2>Executive Summary</h2>
             <div class="metrics-grid">
-                <!-- Revenue Metrics (Part 1) -->
-                {% if summary_stats %}
-                <div class="metric-group">
-                    <h3>Revenue Metrics <span style="font-size: 0.8em; color: var(--text-secondary);">(Part 1)</span></h3>
-                    <table class="metrics-table">
-                        <tbody>
-                            <tr><td>Gross Revenue</td><td class="metric-value">${{ "{:,.2f}".format(summary_stats.gross_revenue|float) }}</td></tr>
-                            <tr><td>Net Revenue</td><td class="metric-value">${{ "{:,.2f}".format(summary_stats.net_revenue|float) }}</td></tr>
-                            <tr><td>Total Refunds</td><td class="metric-value">${{ "{:,.2f}".format(summary_stats.total_refunds|float) }}</td></tr>
-                            <tr><td>Total Discounts</td><td class="metric-value">${{ "{:,.2f}".format(summary_stats.total_discounts|float) }}</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-                {% endif %}
+                
                 
                 <!-- Portfolio Risk Metrics (Part 1) -->
                 <div class="metric-group">
@@ -686,6 +673,21 @@
                     {% endif %}
                 </div>
                 
+                <!-- Revenue Metrics (Part 2) -->
+                {% if summary_stats %}
+                <div class="metric-group">
+                    <h3>Revenue Metrics <span style="font-size: 0.8em; color: var(--text-secondary);">(Part 2)</span></h3>
+                    <table class="metrics-table">
+                        <tbody>
+                            <tr><td>Gross Revenue</td><td class="metric-value">${{ "{:,.2f}".format(summary_stats.gross_revenue|float) }}</td></tr>
+                            <tr><td>Net Revenue</td><td class="metric-value">${{ "{:,.2f}".format(summary_stats.net_revenue|float) }}</td></tr>
+                            <tr><td>Total Refunds</td><td class="metric-value">${{ "{:,.2f}".format(summary_stats.total_refunds|float) }}</td></tr>
+                            <tr><td>Total Discounts</td><td class="metric-value">${{ "{:,.2f}".format(summary_stats.total_discounts|float) }}</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+
                 <!-- Customer Metrics (Part 2) -->
                 {% if summary_stats %}
                 <div class="metric-group">
