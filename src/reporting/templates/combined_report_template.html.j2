@@ -818,17 +818,28 @@
                                     </tbody>
                                 </table>
                             </div>
-                            
-                            <div class="metric-group">
-                                <h5>Account Type Distribution</h5>
-                                <div class="chart-container">
-                                    <div id="account-type-heatmap">
-                                        <p style="text-align: center; color: var(--text-muted); padding: 2rem;">
-                                            Loading account type distribution heatmap...
-                                        </p>
-                                    </div>
+                        </div>
+                        
+                        <!-- Account Type Distribution Heatmap - Full Row -->
+                        <div class="metric-group">
+                            <h5>Account Type Distribution</h5>
+                            <div class="chart-container">
+                                <div id="account-type-heatmap" style="width: 100%; height: 600px; min-height: 500px; border: 2px solid #ddd; background: white;">
+                                    <p style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                                        Loading account type distribution heatmap...
+                                    </p>
                                 </div>
                             </div>
+                            <!-- Debug: Check if heatmap data exists -->
+                            {% if account_type_heatmap %}
+                            <p style="font-size: 12px; color: #666; margin-top: 10px;">
+                                ✅ Heatmap data available ({{ account_type_heatmap|length }} characters)
+                            </p>
+                            {% else %}
+                            <p style="font-size: 12px; color: #666; margin-top: 10px;">
+                                ❌ No heatmap data available
+                            </p>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -1166,15 +1177,22 @@
         {% endif %}
         
         {% if account_type_heatmap %}
-        try {
-            Plotly.newPlot('account-type-heatmap', {{ account_type_heatmap | safe }});
-        } catch (error) {
-            console.error('Error loading heatmap:', error);
-            document.getElementById('account-type-heatmap').innerHTML = 
-                '<p style="text-align: center; color: var(--text-muted); padding: 2rem;">' +
-                'Unable to load account type distribution heatmap. Please refresh the page to try again.' +
-                '</p>';
-        }
+        console.log('Heatmap data available:', {{ account_type_heatmap | safe }});
+        setTimeout(function() {
+            try {
+                console.log('Attempting to render heatmap...');
+                Plotly.newPlot('account-type-heatmap', {{ account_type_heatmap | safe }});
+                console.log('Heatmap rendered successfully');
+            } catch (error) {
+                console.error('Error loading heatmap:', error);
+                document.getElementById('account-type-heatmap').innerHTML = 
+                    '<p style="text-align: center; color: var(--text-muted); padding: 2rem;">' +
+                    'Unable to load account type distribution heatmap. Error: ' + error.message +
+                    '</p>';
+            }
+        }, 1000);
+        {% else %}
+        console.log('No heatmap data available');
         {% endif %}
     </script>
 </body>
