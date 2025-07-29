@@ -301,7 +301,7 @@ class HTMLReportGenerator:
             # Count account types
             account_type_counts = pd.Series(account_types_list).value_counts()
             
-            # Create heatmap using plotly.graph_objects
+            # Create a more robust heatmap with better spacing
             fig = go.Figure(data=go.Heatmap(
                 z=[[int(v) for v in account_type_counts.values]],
                 x=['Account Types'],
@@ -310,15 +310,33 @@ class HTMLReportGenerator:
                 showscale=True,
                 text=[[str(int(val)) for val in account_type_counts.values]],
                 texttemplate='%{text}',
-                textfont={'size': 12}
+                textfont={'size': 14, 'color': 'white'},
+                hoverongaps=False,
+                hoverinfo='z+text'
             ))
             
             fig.update_layout(
-                title='Account Type Distribution Heatmap',
-                xaxis_title='Categories',
-                yaxis_title='Account Types',
-                height=400,
-                margin={'l': 100, 'r': 50, 't': 50, 'b': 50}
+                title={
+                    'text': 'Account Type Distribution Heatmap',
+                    'x': 0.5,
+                    'xanchor': 'center',
+                    'font': {'size': 16}
+                },
+                xaxis={
+                    'title': 'Categories',
+                    'showgrid': False,
+                    'zeroline': False
+                },
+                yaxis={
+                    'title': 'Account Types',
+                    'showgrid': False,
+                    'zeroline': False
+                },
+                height=500,
+                width=600,
+                margin={'l': 120, 'r': 80, 't': 80, 'b': 80},
+                plot_bgcolor='white',
+                paper_bgcolor='white'
             )
             
             return fig.to_dict()
