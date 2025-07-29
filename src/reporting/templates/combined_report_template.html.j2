@@ -701,47 +701,86 @@
                 
                 {% if business_metrics is defined and business_metrics|length > 0 %}
                 <div class="metric-group">
-                    <h4>Business-Level Portfolio Metrics by Monthly Vintage</h4>
+                    <h4>Business-Level Portfolio Dashboard by Vintage</h4>
                     <p><strong>Metrics tracked per business by monthly vintage:</strong></p>
                     <ul>
-                        <li><strong>Limit:</strong> Credit limit assigned to the account</li>
-                        <li><strong>Average Daily Balance:</strong> Average daily principal balance</li>
-                        <li><strong>Credit Account Age:</strong> Age of the credit account in months</li>
-                        <li><strong>Revenue:</strong> Interest + interchange fees</li>
-                        <li><strong>APR:</strong> Annual Percentage Rate</li>
-                        <li><strong>Borrower Status:</strong> Priority order: "Closed" > "Current" > "Delinquent" > "Default" > "ChargedOff"</li>
+                        <li><strong>Total Limit:</strong> Sum of credit limits for all accounts in vintage</li>
+                        <li><strong>Total Average Daily Balance:</strong> Sum of average daily balances</li>
+                        <li><strong>Average Account Age:</strong> Mean age of accounts in months</li>
+                        <li><strong>Total Revenue:</strong> Sum of interest + interchange fees</li>
+                        <li><strong>Average APR:</strong> Mean APR across accounts</li>
+                        <li><strong>Primary Status:</strong> Most common status in vintage</li>
+                        <li><strong>Account Count:</strong> Number of accounts in vintage</li>
                     </ul>
                     
                     <div class="table-container">
                         <table class="metrics-table">
                             <thead>
                                 <tr>
+                                    <th>Business ID</th>
                                     <th>Vintage Month</th>
                                     <th>Account Type</th>
-                                    <th>Limit</th>
-                                    <th>Avg Daily Balance</th>
-                                    <th>Account Age (months)</th>
-                                    <th>Revenue</th>
-                                    <th>APR</th>
-                                    <th>Status</th>
+                                    <th>Total Limit</th>
+                                    <th>Total Balance</th>
+                                    <th>Avg Age (months)</th>
+                                    <th>Total Revenue</th>
+                                    <th>Avg APR</th>
+                                    <th>Primary Status</th>
+                                    <th>Account Count</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for _, row in business_metrics.head(20).iterrows() %}
+                                {% for _, row in business_metrics.head(30).iterrows() %}
                                 <tr>
+                                    <td class="metric-value">{{ row.get('businessId', 'N/A') }}</td>
                                     <td>{{ row.get('vintage_month', 'N/A') }}</td>
                                     <td>{{ row.get('accountType', 'N/A') }}</td>
-                                    <td class="metric-value">${{ "{:,.2f}".format(row.get('limit', 0)|float) }}</td>
-                                    <td class="metric-value">${{ "{:,.2f}".format(row.get('averageDailyBalance', 0)|float) }}</td>
-                                    <td class="metric-value">{{ "{:.1f}".format(row.get('accountAge', 0)|float) }}</td>
-                                    <td class="metric-value">${{ "{:,.2f}".format(row.get('revenue', 0)|float) }}</td>
-                                    <td class="metric-value">{{ "{:.2f}".format(row.get('apr', 0)|float) }}%</td>
-                                    <td class="metric-value">{{ row.get('status', 'N/A') }}</td>
+                                    <td class="metric-value">${{ "{:,.0f}".format(row.get('totalLimit', 0)|float) }}</td>
+                                    <td class="metric-value">${{ "{:,.0f}".format(row.get('totalAverageDailyBalance', 0)|float) }}</td>
+                                    <td class="metric-value">{{ "{:.1f}".format(row.get('avgAccountAge', 0)|float) }}</td>
+                                    <td class="metric-value">${{ "{:,.0f}".format(row.get('totalRevenue', 0)|float) }}</td>
+                                    <td class="metric-value">{{ "{:.2f}".format(row.get('avgAPR', 0)|float) }}%</td>
+                                    <td class="metric-value">{{ row.get('primaryStatus', 'N/A') }}</td>
+                                    <td class="metric-value">{{ row.get('accountCount', 0)|int }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
-                        <p class="table-note"><em>Showing first 20 records. Full dataset available in detailed analysis.</em></p>
+                        <p class="table-note"><em>Showing first 30 business-vintage combinations. Full dataset available in detailed analysis.</em></p>
+                    </div>
+                    
+                    <!-- Business Summary Statistics -->
+                    <div class="metric-group">
+                        <h4>Business Performance Summary</h4>
+                        {% set unique_businesses = business_metrics['businessGuid'].nunique() %}
+                        {% set total_vintages = business_metrics['vintage_month'].nunique() %}
+                        {% set total_revenue = business_metrics['totalRevenue'].sum() %}
+                        {% set avg_accounts_per_business = business_metrics['accountCount'].sum() / unique_businesses %}
+                        
+                        <div class="metrics-grid">
+                            <div class="metric-group">
+                                <h5>Portfolio Overview</h5>
+                                <table class="metrics-table">
+                                    <tbody>
+                                        <tr><td>Unique Businesses</td><td class="metric-value">{{ unique_businesses|int }}</td></tr>
+                                        <tr><td>Total Vintage Periods</td><td class="metric-value">{{ total_vintages|int }}</td></tr>
+                                        <tr><td>Total Revenue</td><td class="metric-value">${{ "{:,.0f}".format(total_revenue|float) }}</td></tr>
+                                        <tr><td>Avg Accounts per Business</td><td class="metric-value">{{ "{:.1f}".format(avg_accounts_per_business|float) }}</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div class="metric-group">
+                                <h5>Account Type Distribution</h5>
+                                <table class="metrics-table">
+                                    <tbody>
+                                        {% for account_type, count in business_metrics['accountType'].value_counts().items() %}
+                                        <tr><td>{{ account_type }}</td><td class="metric-value">{{ count|int }}</td></tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 {% endif %}
@@ -751,11 +790,12 @@
                     <h4>Additional Business Metrics (Recommended)</h4>
                     <p><strong>Why these metrics matter:</strong></p>
                     <ul>
-                        <li><strong>Utilization Rate:</strong> Balance/Limit ratio - helps identify credit risk and revenue potential</li>
-                        <li><strong>Payment Rate:</strong> Monthly payment amount relative to balance - indicates borrower behavior</li>
-                        <li><strong>Revenue per Account:</strong> Average revenue generated per account type</li>
-                        <li><strong>Risk-Adjusted Return:</strong> Return considering default and charge-off rates</li>
+                        <li><strong>Business Concentration Risk:</strong> Monitor exposure to specific businesses</li>
                         <li><strong>Vintage Performance:</strong> Compare performance across different account opening periods</li>
+                        <li><strong>Revenue per Business:</strong> Identify high-value business relationships</li>
+                        <li><strong>Account Utilization:</strong> Balance/Limit ratio per business</li>
+                        <li><strong>Business Growth:</strong> Track account growth over time per business</li>
+                        <li><strong>Risk Distribution:</strong> Status distribution across businesses</li>
                     </ul>
                 </div>
             </div>

@@ -528,13 +528,13 @@ class BusinessMetricsCalculator:
     @staticmethod
     def calculate_business_metrics(data: pd.DataFrame) -> pd.DataFrame:
         """
-        Calculate business-level metrics grouped by monthly vintage.
+        Calculate business-level metrics grouped by business and monthly vintage.
         
         Args:
             data: Preprocessed loan tape data
             
         Returns:
-            DataFrame with business metrics by vintage
+            DataFrame with business metrics by business and vintage
         """
         # Create a copy to avoid modifying original data
         df = data.copy()
@@ -554,53 +554,44 @@ class BusinessMetricsCalculator:
         # Get priority status
         df['status'] = df['accountEndingStatus'].apply(BusinessMetricsCalculator._get_priority_status)
         
-        # Select and rename columns for business metrics
-        business_metrics = df[[
-            'vintage_month',
-            'accountType',
-            'accountDailyAveragePrincipalBalance',
-            'accountAge',
-            'revenue',
-            'apr',
-            'status',
-            'capitalAccountGuid'
-        ]].copy()
+        # Add limit column (using balance as proxy since limit not in data)
+        df['limit'] = df['accountDailyAveragePrincipalBalance'] * 1.2  # Estimate limit as 120% of balance
+        
+        # Group by business and vintage month, then aggregate metrics
+        business_vintage_metrics = df.groupby(['businessGuid', 'vintage_month', 'accountType']).agg({
+            'limit': 'sum',
+            'accountDailyAveragePrincipalBalance': 'sum',
+            'accountAge': 'mean',
+            'revenue': 'sum',
+            'apr': 'mean',
+            'status': lambda x: x.mode().iloc[0] if len(x.mode()) > 0 else 'Unknown',
+            'capitalAccountGuid': 'count'
+        }).reset_index()
         
         # Rename columns for clarity
-        business_metrics.columns = [
+        business_vintage_metrics.columns = [
+            'businessGuid',
             'vintage_month',
             'accountType',
-            'averageDailyBalance',
-            'accountAge',
-            'revenue',
-            'apr',
-            'status',
-            'accountId'
+            'totalLimit',
+            'totalAverageDailyBalance',
+            'avgAccountAge',
+            'totalRevenue',
+            'avgAPR',
+            'primaryStatus',
+            'accountCount'
         ]
         
-        # Add limit column (using balance as proxy since limit not in data)
-        business_metrics['limit'] = business_metrics['averageDailyBalance'] * 1.2  # Estimate limit as 120% of balance
+        # Add business identifier (shortened for display)
+        business_vintage_metrics['businessId'] = business_vintage_metrics['businessGuid'].str[:8] + '...'
         
-        # Reorder columns to match requirements
-        business_metrics = business_metrics[[
-            'vintage_month',
-            'accountType',
-            'limit',
-            'averageDailyBalance',
-            'accountAge',
-            'revenue',
-            'apr',
-            'status',
-            'accountId'
-        ]]
-        
-        # Sort by vintage month (newest first) and then by status priority
-        business_metrics = business_metrics.sort_values(
-            ['vintage_month', 'status'], 
-            ascending=[False, True]
+        # Sort by business, vintage month (newest first), and account type
+        business_vintage_metrics = business_vintage_metrics.sort_values(
+            ['businessGuid', 'vintage_month', 'accountType'], 
+            ascending=[True, False, True]
         )
         
-        return business_metrics
+        return business_vintage_metrics
     
     @staticmethod
     def _get_priority_status(status: str) -> str:
