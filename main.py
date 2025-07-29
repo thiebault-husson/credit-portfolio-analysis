@@ -6,6 +6,7 @@ Main entry point for generating comprehensive analysis reports.
 
 import argparse
 import sys
+import pandas as pd
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, Any, Optional
@@ -100,6 +101,28 @@ Examples:
         )
         part2_results = orders_analyzer.analyze_orders()
         
+        # Display Part 2 summary statistics
+        summary_stats = part2_results.get('summary_stats', {})
+        customer_acquisition_cost = part2_results.get('customer_acquisition_cost', {})
+        cac_summary = customer_acquisition_cost.get('summary', {})
+        
+        print(f"📊 Part 2 Summary Statistics:")
+        print(f"   - Total Customers: {summary_stats.get('total_customers', 0):,}")
+        print(f"   - Total Orders: {summary_stats.get('total_orders', 0):,}")
+        print(f"   - Total Revenue: ${summary_stats.get('net_revenue', 0):,.2f}")
+        print(f"   - Average LTV: ${summary_stats.get('average_ltv', 0):,.2f}")
+        print(f"   - Average AOV: ${summary_stats.get('average_aov', 0):,.2f}")
+        print(f"   - Average Orders per Customer: {summary_stats.get('avg_orders_per_customer', 0):.2f}")
+        print(f"   - Estimated CAC: ${cac_summary.get('estimated_cac', 0):,.2f}")
+        print(f"   - LTV/CAC Ratio: {cac_summary.get('ltv_cac_ratio', 0):.2f}")
+        print(f"   - Total Marketing Spend: ${cac_summary.get('total_marketing_spend', 0):,.2f}")
+        
+        # Display cohort information
+        cohort_metrics = part2_results.get('cohort_metrics', pd.DataFrame())
+        if not cohort_metrics.empty:
+            print(f"   - Number of Cohorts: {len(cohort_metrics)}")
+            print(f"   - Cohort Date Range: {cohort_metrics['cohort_month'].min()} to {cohort_metrics['cohort_month'].max()}")
+        
         # Generate combined report
         print("📋 Generating combined analysis report...")
         
@@ -113,7 +136,7 @@ Examples:
                 'account_type_heatmap': report_generator._create_account_type_heatmap(part1_results['business_metrics'])
             },
             'part2_charts': {
-                'ltv_by_cohort': report_generator._create_ltv_by_cohort_chart(part2_results['lifetime_value']),
+                'ltv_by_cohort': report_generator._create_ltv_by_cohort_chart(part2_results),
                 'aov_by_cohort': report_generator._create_aov_by_cohort_chart(part2_results['average_order_value'])
             },
             'report_date': args.report_date

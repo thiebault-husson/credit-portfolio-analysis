@@ -104,6 +104,14 @@ class OrdersAnalyzer:
         cohort_metrics['average_orders_per_customer'] = cohort_metrics['total_orders'] / cohort_metrics['customer_count']
         cohort_metrics['average_revenue_per_customer'] = cohort_metrics['total_revenue'] / cohort_metrics['customer_count']
         
+        # Add LTV columns for consistency with template
+        cohort_metrics['total_ltv'] = cohort_metrics['total_revenue']
+        cohort_metrics['avg_ltv'] = cohort_metrics['average_revenue_per_customer']
+        
+        # Add AOV columns for consistency with template
+        cohort_metrics['order_count'] = cohort_metrics['total_orders']
+        cohort_metrics['avg_aov'] = cohort_metrics['total_revenue'] / cohort_metrics['total_orders']
+        
         return cohort_metrics
     
     def _calculate_global_ltv(self) -> Dict:
@@ -228,14 +236,28 @@ class OrdersAnalyzer:
         if self._cohort_analysis is None:
             self._cohort_analysis = self._calculate_cohort_metrics()
         
-        # Get global CAC (same for all cohorts as estimate)
-        global_cac = self._calculate_global_cac()['estimated_cac']
+        # Calculate marketing spend by month
+        bank_transactions = self.bank_transactions.copy()
+        bank_transactions['month'] = pd.to_datetime(bank_transactions['date']).dt.to_period('M')
         
+        # Filter for marketing transactions
+        marketing_transactions = bank_transactions[
+            bank_transactions['category'].str.contains('Marketing', na=False)
+        ]
+        
+        # Calculate marketing spend by month
+        monthly_marketing_spend = marketing_transactions.groupby('month')['amount'].sum().abs()
+        
+        # Get cohort data
         cac_data = self._cohort_analysis.copy()
-        cac_data['cac'] = global_cac  # Same CAC for all cohorts as estimate
+        
+        # Calculate CAC for each cohort
+        cac_data['marketing_spend'] = cac_data['cohort_month'].map(monthly_marketing_spend).fillna(0)
+        cac_data['cac'] = cac_data['marketing_spend'] / cac_data['customer_count']
+        cac_data['cac'] = cac_data['cac'].fillna(0)  # Handle division by zero
         
         return {
-            'by_cohort': cac_data[['cohort_month', 'customer_count', 'cac']].to_dict('records'),
+            'by_cohort': cac_data[['cohort_month', 'customer_count', 'marketing_spend', 'cac']].to_dict('records'),
             'summary': self._calculate_global_cac()
         }
     
@@ -329,20 +351,39 @@ class OrdersAnalyzer:
         # Calculate average AOV
         average_aov = self.orders_data['net_revenue'].mean()
         
+        # Calculate average orders per customer
+        customer_orders = self.orders_data.groupby('customer')['order_id'].count()
+        avg_orders_per_customer = customer_orders.mean()
+        
+        # Get CAC metrics
+        cac_metrics = self._calculate_global_cac()
+        
+        # Get cohort metrics for number of cohorts
+        cohort_metrics = self._calculate_cohort_metrics()
+        number_of_cohorts = len(cohort_metrics) if not cohort_metrics.empty else 0
+        
         return {
             'total_orders': len(self.orders_data),
             'total_customers': self.orders_data['customer'].nunique(),
             'average_ltv': average_ltv,
             'average_aov': average_aov,
+            'avg_orders_per_customer': avg_orders_per_customer,
             'date_range': {
                 'start': self.orders_data['created_at'].min(),
                 'end': self.orders_data['created_at'].max()
             },
             'gross_revenue': self.orders_data['gross_amount'].sum(),
             'net_revenue': self.orders_data['net_revenue'].sum(),
+            'total_revenue': self.orders_data['net_revenue'].sum(),  # Add total_revenue for template compatibility
             'total_refunds': self.orders_data['refunds'].sum(),
             'total_discounts': self.orders_data['discounts'].sum(),
             'average_order_value': self.orders_data['net_revenue'].mean(),
             'bank_transactions_count': len(self.bank_transactions),
-            'bank_transactions_categories': self.bank_transactions['category'].nunique()
+            'bank_transactions_categories': self.bank_transactions['category'].nunique(),
+            # CAC metrics
+            'average_cac': cac_metrics['estimated_cac'],
+            'total_marketing_spend': cac_metrics['total_marketing_spend'],
+            'ltv_cac_ratio': cac_metrics['ltv_cac_ratio'],
+            # Cohort metrics
+            'number_of_cohorts': number_of_cohorts
         } 

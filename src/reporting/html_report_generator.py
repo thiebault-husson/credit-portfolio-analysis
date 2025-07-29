@@ -10,6 +10,8 @@ import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
+from plotly.utils import PlotlyJSONEncoder
+import json
 import jinja2
 
 
@@ -45,6 +47,21 @@ class HTMLReportGenerator:
             # Fallback to latest month if portfolio-wide rates not available
             portfolio_wide_rates = part1_data['portfolio_metrics'][0] if part1_data['portfolio_metrics'] else {}
         
+        # Calculate account type distribution
+        account_type_distribution = {}
+        if not part1_data.get('business_metrics', pd.DataFrame()).empty:
+            business_metrics = part1_data['business_metrics']
+            # Split account types and count occurrences
+            all_account_types = []
+            for account_types_str in business_metrics['accountTypes'].dropna():
+                if isinstance(account_types_str, str):
+                    account_types = [at.strip() for at in account_types_str.split(',')]
+                    all_account_types.extend(account_types)
+            
+            # Count occurrences
+            if all_account_types:
+                account_type_distribution = pd.Series(all_account_types).value_counts().to_dict()
+        
         # Prepare template data
         template_data = {
             'report_date': report_date,
@@ -62,7 +79,8 @@ class HTMLReportGenerator:
             'yield_chart': part1_charts.get('yield_metrics', {}),
             'ltv_chart': part2_charts.get('ltv_by_cohort', {}),
             'aov_chart': part2_charts.get('aov_by_cohort', {}),
-            'account_type_heatmap': part1_charts.get('account_type_heatmap', {})
+            'account_type_heatmap': part1_charts.get('account_type_heatmap', {}),
+            'account_type_distribution': account_type_distribution
         }
         
         # Render template
@@ -160,40 +178,44 @@ class HTMLReportGenerator:
         return fig.to_dict()
     
     def _create_ltv_by_cohort_chart(self, cohort_analysis: Dict) -> Dict:
-        """Create a line chart showing LTV by cohort."""
-        if not cohort_analysis or 'by_cohort' not in cohort_analysis:
+        """Create a simple bar chart using Plotly Express."""
+        # Use cohort_metrics data instead of lifetime_value data
+        if not cohort_analysis or 'cohort_metrics' not in cohort_analysis:
             return {}
         
-        ltv_data = cohort_analysis['by_cohort']
-        if not ltv_data:
+        cohort_metrics = cohort_analysis['cohort_metrics']
+        if cohort_metrics.empty:
             return {}
         
-        # Convert to DataFrame for easier manipulation
-        df = pd.DataFrame(ltv_data)
-        df['cohort_date'] = pd.to_datetime(df['cohort_month'].astype(str))
+        # Sort by cohort date for proper ordering
+        cohort_metrics = cohort_metrics.sort_values('cohort_month')
         
-        fig = go.Figure()
+        # Convert Period objects to strings for JSON serialization
+        cohort_metrics = cohort_metrics.copy()
+        cohort_metrics['cohort_month'] = cohort_metrics['cohort_month'].astype(str)
         
-        fig.add_trace(go.Scatter(
-            x=df['cohort_date'],
-            y=df['ltv'],
-            mode='lines+markers',
-            name='Lifetime Value',
-            line=dict(color='#667eea', width=3),
-            marker=dict(size=8)
-        ))
+        # Create simple bar chart using Plotly Express
+        import plotly.express as px
         
-        fig.update_layout(
-            title="Customer Lifetime Value by Cohort",
-            xaxis_title="Cohort Date",
-            yaxis_title="Lifetime Value ($)",
-            template="plotly_white",
-            height=500,
-            showlegend=True,
-            hovermode='x unified'
+        fig = px.bar(
+            cohort_metrics, 
+            x='cohort_month', 
+            y='avg_ltv',
+            title="LTV Trends by Cohort",
+            labels={'cohort_month': 'Cohort Month', 'avg_ltv': 'Average LTV ($)'},
+            color_discrete_sequence=['#3b82f6']
         )
         
-        return fig.to_dict()
+        # Update layout for better appearance
+        fig.update_layout(
+            height=400,
+            showlegend=False,
+            plot_bgcolor='white',
+            paper_bgcolor='white',
+            margin=dict(l=60, r=60, t=80, b=60)
+        )
+        
+        return json.dumps(fig, cls=PlotlyJSONEncoder)
     
     def _create_aov_by_cohort_chart(self, cohort_analysis: Dict) -> Dict:
         """Create a line chart showing AOV by cohort."""
@@ -229,7 +251,7 @@ class HTMLReportGenerator:
             hovermode='x unified'
         )
         
-        return fig.to_dict()
+        return json.dumps(fig, cls=PlotlyJSONEncoder)
     
     def _create_revenue_gauge_chart(self, summary_stats: Dict) -> Dict:
         """Create a gauge chart showing revenue metrics."""

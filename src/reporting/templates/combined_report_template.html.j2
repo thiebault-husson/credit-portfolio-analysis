@@ -57,6 +57,13 @@
             /* Transitions */
             --transition-fast: 0.15s ease;
             --transition-normal: 0.3s ease;
+            
+            /* Design System Spacing */
+            --spacing-xs: 0.5rem;
+            --spacing-sm: 1rem;
+            --spacing-md: 1.5rem;
+            --spacing-lg: 2rem;
+            --spacing-xl: 3rem;
         }
 
         * {
@@ -212,7 +219,8 @@
         .metric-group {
             background: var(--bg-secondary);
             border-radius: var(--radius-lg);
-            padding: 1.5rem;
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
             border: 1px solid var(--border-color);
             box-shadow: var(--shadow-sm);
             transition: var(--transition-normal);
@@ -224,13 +232,44 @@
         }
 
         .metric-group h3 {
-            margin: 0 0 1rem 0;
+            margin: 0 0 var(--spacing-sm) 0;
             color: var(--text-primary);
             font-size: 1rem;
             font-weight: 600;
             letter-spacing: -0.025em;
-            padding-bottom: 0.5rem;
+            padding-bottom: var(--spacing-xs);
             border-bottom: 2px solid var(--border-color);
+        }
+
+        .metric-group h4 {
+            margin: 0 0 var(--spacing-sm) 0;
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: -0.025em;
+        }
+
+        .metric-group h5 {
+            margin: 0 0 var(--spacing-sm) 0;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            font-weight: 600;
+            letter-spacing: -0.025em;
+        }
+
+        .metric-group p {
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .metric-group ul {
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .metric-group li {
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-xs);
         }
 
         /* Clean Tables */
@@ -304,6 +343,20 @@
             height: 500px;
             border-radius: var(--radius-md);
             overflow: hidden;
+            min-height: 500px;
+        }
+        
+        /* Ensure Plotly charts are responsive */
+        .chart-container .js-plotly-plot {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        
+        /* Chart.js canvas styling */
+        #ltv-chart-canvas {
+            width: 100% !important;
+            height: 400px !important;
+            max-height: 400px;
         }
 
         .chart-container svg {
@@ -486,8 +539,8 @@
 
         /* Section Groups */
         .section-group {
-            margin: 2rem 0;
-            padding: 1.5rem;
+            margin: var(--spacing-lg) 0;
+            padding: var(--spacing-md);
             background: var(--bg-secondary);
             border-radius: var(--radius-lg);
             border: 1px solid var(--border-color);
@@ -497,8 +550,8 @@
             color: var(--text-primary);
             font-size: 1.25rem;
             font-weight: 600;
-            margin: 0 0 1rem 0;
-            padding-bottom: 0.5rem;
+            margin: 0 0 var(--spacing-sm) 0;
+            padding-bottom: var(--spacing-xs);
             border-bottom: 2px solid var(--primary-color);
         }
 
@@ -506,23 +559,23 @@
             color: var(--text-primary);
             font-size: 1.1rem;
             font-weight: 600;
-            margin: 1rem 0 0.5rem 0;
+            margin: var(--spacing-sm) 0 var(--spacing-xs) 0;
         }
 
         .section-group p {
             color: var(--text-secondary);
-            margin: 0.5rem 0 1rem 0;
+            margin: var(--spacing-xs) 0 var(--spacing-sm) 0;
             line-height: 1.5;
         }
 
         .section-group ul {
             color: var(--text-secondary);
-            margin: 0.5rem 0 1rem 0;
-            padding-left: 1.5rem;
+            margin: var(--spacing-xs) 0 var(--spacing-sm) 0;
+            padding-left: var(--spacing-md);
         }
 
         .section-group li {
-            margin: 0.25rem 0;
+            margin: var(--spacing-xs) 0;
             line-height: 1.4;
         }
 
@@ -592,9 +645,24 @@
         <section id="executive-summary" class="card">
             <h2>Executive Summary</h2>
             <div class="metrics-grid">
-                <!-- Portfolio Metrics -->
+                <!-- Revenue Metrics (Part 1) -->
+                {% if summary_stats %}
                 <div class="metric-group">
-                    <h3>Portfolio Risk Metrics</h3>
+                    <h3>Revenue Metrics <span style="font-size: 0.8em; color: var(--text-secondary);">(Part 1)</span></h3>
+                    <table class="metrics-table">
+                        <tbody>
+                            <tr><td>Gross Revenue</td><td class="metric-value">${{ "{:,.2f}".format(summary_stats.gross_revenue|float) }}</td></tr>
+                            <tr><td>Net Revenue</td><td class="metric-value">${{ "{:,.2f}".format(summary_stats.net_revenue|float) }}</td></tr>
+                            <tr><td>Total Refunds</td><td class="metric-value">${{ "{:,.2f}".format(summary_stats.total_refunds|float) }}</td></tr>
+                            <tr><td>Total Discounts</td><td class="metric-value">${{ "{:,.2f}".format(summary_stats.total_discounts|float) }}</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+                
+                <!-- Portfolio Risk Metrics (Part 1) -->
+                <div class="metric-group">
+                    <h3>Portfolio Risk Metrics <span style="font-size: 0.8em; color: var(--text-secondary);">(Part 1)</span></h3>
                     {% if portfolio_wide_rates %}
                     <table class="metrics-table">
                         <thead>
@@ -618,27 +686,16 @@
                     {% endif %}
                 </div>
                 
+                <!-- Customer Metrics (Part 2) -->
                 {% if summary_stats %}
                 <div class="metric-group">
-                    <h3>Customer Metrics</h3>
+                    <h3>Customer Metrics <span style="font-size: 0.8em; color: var(--text-secondary);">(Part 2)</span></h3>
                     <table class="metrics-table">
                         <tbody>
                             <tr><td>Total Orders</td><td class="metric-value">{{ "{:,.0f}".format(summary_stats.total_orders|int) }}</td></tr>
                             <tr><td>Total Customers</td><td class="metric-value">{{ "{:,.0f}".format(summary_stats.total_customers|int) }}</td></tr>
                             <tr><td>Average LTV</td><td class="metric-value">${{ "{:.2f}".format(summary_stats.average_ltv|float) }}</td></tr>
                             <tr><td>Average AOV</td><td class="metric-value">${{ "{:.2f}".format(summary_stats.average_aov|float) }}</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-                
-                <div class="metric-group">
-                    <h3>Revenue Metrics</h3>
-                    <table class="metrics-table">
-                        <tbody>
-                            <tr><td>Gross Revenue</td><td class="metric-value">${{ "{:,.2f}".format(summary_stats.gross_revenue|float) }}</td></tr>
-                            <tr><td>Net Revenue</td><td class="metric-value">${{ "{:,.2f}".format(summary_stats.net_revenue|float) }}</td></tr>
-                            <tr><td>Total Refunds</td><td class="metric-value">${{ "{:,.2f}".format(summary_stats.total_refunds|float) }}</td></tr>
-                            <tr><td>Total Discounts</td><td class="metric-value">${{ "{:,.2f}".format(summary_stats.total_discounts|float) }}</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -656,90 +713,93 @@
                 <h3>1A. Lending Portfolio Metrics</h3>
                 <p><strong>JTBD:</strong> Our risk team is looking for a dashboard to get a pulse on the performance of our loan book. Using your preferred tools, help us calculate the following by month:</p>
                 
-                <div class="metrics-grid">
-                    <!-- Portfolio Risk Metrics -->
-                    <div class="metric-group">
-                        <h4>Portfolio Risk Metrics</h4>
-                        {% if portfolio_wide_rates %}
-                        <table class="metrics-table">
-                            <thead>
-                                <tr>
-                                    <th>Metric</th>
-                                    <th>Value</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr><td>Delinquency Rate</td><td class="metric-value">{{ "{:.2f}".format(portfolio_wide_rates.delinquency_rate|float * 100) }}%</td></tr>
-                                <tr><td>Default Rate</td><td class="metric-value">{{ "{:.2f}".format(portfolio_wide_rates.default_rate|float * 100) }}%</td></tr>
-                                <tr><td>Charge-off Rate</td><td class="metric-value">{{ "{:.2f}".format(portfolio_wide_rates.charge_off_rate|float * 100) }}%</td></tr>
-                            </tbody>
-                        </table>
-                        {% endif %}
-                    </div>
-                    
-                    <!-- Portfolio Yield Metrics -->
-                    <div class="metric-group">
-                        <h4>Portfolio Yield Metrics</h4>
-                        {% if yield_metrics %}
-                        <table class="metrics-table">
-                            <thead>
-                                <tr>
-                                    <th>Metric</th>
-                                    <th>Value</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for metric_name, metric_data in yield_metrics.items() %}
-                                {% if metric_data and metric_data is mapping %}
-                                <tr>
-                                    <td>{{ metric_name.replace('_', ' ').title() }}</td>
-                                    <td class="metric-value">{{ "{:.2f}".format(metric_data.get(metric_name, 0) * 100) }}%</td>
-                                </tr>
-                                {% endif %}
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                        {% endif %}
-                    </div>
+                <!-- Portfolio Risk Metrics -->
+                <div class="metric-group">
+                    <h4>Portfolio Risk Metrics</h4>
+                    {% if portfolio_wide_rates %}
+                    <table class="metrics-table">
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Delinquency Rate</td><td class="metric-value">{{ "{:.2f}".format(portfolio_wide_rates.delinquency_rate|float * 100) }}%</td></tr>
+                            <tr><td>Default Rate</td><td class="metric-value">{{ "{:.2f}".format(portfolio_wide_rates.default_rate|float * 100) }}%</td></tr>
+                            <tr><td>Charge-off Rate</td><td class="metric-value">{{ "{:.2f}".format(portfolio_wide_rates.charge_off_rate|float * 100) }}%</td></tr>
+                        </tbody>
+                    </table>
+                    {% endif %}
+                </div>
+                
+                <!-- Portfolio Yield Metrics -->
+                <div class="metric-group">
+                    <h4>Portfolio Yield Metrics</h4>
+                    {% if yield_metrics %}
+                    <table class="metrics-table">
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for metric_name, metric_data in yield_metrics.items() %}
+                            {% if metric_data and metric_data is mapping %}
+                            <tr>
+                                <td>{{ metric_name.replace('_', ' ').title() }}</td>
+                                <td class="metric-value">{{ "{:.2f}".format(metric_data.get(metric_name, 0) * 100) }}%</td>
+                            </tr>
+                            {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% endif %}
+                </div>
+                
+                <!-- Why These Metrics Matter -->
+                <div class="metric-group">
+                    <h4>Why These Metrics Matter</h4>
+                    <p><strong>Portfolio Risk Metrics:</strong> These metrics provide early warning signals for portfolio health. Delinquency rates indicate payment stress, default rates show credit quality deterioration, and charge-off rates reflect actual losses. Monitoring these trends helps identify when to tighten underwriting standards or adjust risk management strategies.</p>
+                    <p><strong>Portfolio Yield Metrics:</strong> Yield metrics measure the profitability of the loan portfolio. They help assess pricing effectiveness, identify revenue optimization opportunities, and ensure the portfolio generates adequate returns relative to risk. These metrics are essential for strategic decision-making around product pricing and portfolio management.</p>
                 </div>
                 
                 <!-- Additional Portfolio Metrics -->
                 <div class="metric-group">
-                    <h4>Additional Portfolio Metrics (Recommended)</h4>
-                    <p><strong>Why these metrics matter:</strong></p>
+                    <h4>Additional Portfolio Metrics</h4>
+                    <p><strong>Are there any other metrics you'd recommend tracking?</strong></p>
+                    <p>Yes, I recommend implementing <strong>time-based rolling metrics</strong> to monitor portfolio health trends and enable proactive risk management:</p>
+                    
+                    <div class="metric-group">
+                        <h4>Rolling Risk Metrics</h4>
+                        <ul>
+                            <li><strong>Rolling Delinquency Rate:</strong> 3-month and 6-month rolling averages to spot early deterioration trends</li>
+                            <li><strong>Rolling Default Rate:</strong> Track default patterns over time to identify portfolio stress</li>
+                            <li><strong>Rolling Charge-off Rate:</strong> Monitor loss trends to adjust underwriting and pricing strategies</li>
+                        </ul>
+                        <p><em>Recommended visualization: Line graphs with rolling windows to identify trend changes and seasonal patterns.</em></p>
+                    </div>
+                    
+                    <div class="metric-group">
+                        <h4>Early Warning System</h4>
+                        <p>These rolling metrics help:</p>
+                        <ul>
+                            <li><strong>Proactively tighten underwriting</strong> before portfolio performance degrades</li>
+                            <li><strong>Adjust pricing strategies</strong> based on risk trend analysis</li>
+                            <li><strong>Slow lending growth</strong> when risk metrics indicate stress</li>
+                            <li><strong>Identify seasonal patterns</strong> in portfolio performance</li>
+                        </ul>
+                    </div>
+                    
+                    <p><strong>Portfolio Impact:</strong> These rolling metrics help determine where to prioritize risk management efforts, optimize underwriting strategies, and identify early warning signals for portfolio stress.</p>
+                    
                     <ul>
                         <li><strong>Portfolio Concentration Risk:</strong> Monitor exposure to specific account types or vintage periods</li>
                         <li><strong>Payment Rate:</strong> Track the rate at which borrowers make payments on their accounts</li>
                         <li><strong>Utilization Rate:</strong> Measure how much of available credit is being used</li>
                         <li><strong>Portfolio Aging:</strong> Understand the maturity profile of the loan book</li>
                     </ul>
-                    
-                    <table class="metrics-table">
-                        <thead>
-                            <tr>
-                                <th>Metric</th>
-                                <th>Value</th>
-                                <th>Explanation</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Total Accounts</td>
-                                <td class="metric-value">{{ portfolio_wide_rates.total_accounts|int }}</td>
-                                <td>Total number of credit accounts in portfolio</td>
-                            </tr>
-                            <tr>
-                                <td>Current Accounts</td>
-                                <td class="metric-value">{{ portfolio_wide_rates.current_accounts|int }}</td>
-                                <td>Accounts in good standing</td>
-                            </tr>
-                            <tr>
-                                <td>Closed Accounts</td>
-                                <td class="metric-value">{{ portfolio_wide_rates.closed_accounts|int }}</td>
-                                <td>Accounts that have been closed</td>
-                            </tr>
-                        </tbody>
-                    </table>
                 </div>
             </div>
             
@@ -751,6 +811,7 @@
                 {% if business_metrics is defined and business_metrics|length > 0 %}
                 <div class="metric-group">
                     <h4>Business-Level Portfolio Dashboard by Vintage</h4>
+                    <p><strong>Total records: {{ business_metrics|length }} business-vintage combinations</strong></p>
                     <p><strong>Metrics tracked per business by monthly vintage:</strong></p>
                     <ul>
                         <li><strong>Total Limit:</strong> Sum of credit limits for all accounts in vintage</li>
@@ -797,65 +858,44 @@
                         </table>
                         <p class="table-note"><em>Showing all {{ business_metrics|length }} business-vintage combinations, ordered by status priority: Closed > Current > Delinquent > Default > ChargedOff</em></p>
                     </div>
-                    
-                    <!-- Business Summary Statistics -->
-                    <div class="metric-group">
-                        <h4>Business Performance Summary</h4>
-                        {% set unique_businesses = business_metrics['businessGuid'].nunique() %}
-                        {% set total_vintages = business_metrics['vintage_month'].nunique() %}
-                        {% set total_revenue = business_metrics['totalRevenue'].sum() %}
-                        {% set avg_accounts_per_business = business_metrics['accountCount'].sum() / unique_businesses %}
-                        
-                        <div class="metrics-grid">
-                            <div class="metric-group">
-                                <h5>Portfolio Overview</h5>
-                                <table class="metrics-table">
-                                    <tbody>
-                                        <tr><td>Unique Businesses</td><td class="metric-value">{{ unique_businesses|int }}</td></tr>
-                                        <tr><td>Total Vintage Periods</td><td class="metric-value">{{ total_vintages|int }}</td></tr>
-                                        <tr><td>Total Revenue</td><td class="metric-value">${{ "{:,.0f}".format(total_revenue|float) }}</td></tr>
-                                        <tr><td>Avg Accounts per Business</td><td class="metric-value">{{ "{:.1f}".format(avg_accounts_per_business|float) }}</td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                        
-                        <!-- Account Type Distribution Heatmap - Full Row -->
-                        <div class="metric-group">
-                            <h5>Account Type Distribution</h5>
-                            <div class="chart-container">
-                                {% if account_type_heatmap and account_type_heatmap.html %}
-                                {{ account_type_heatmap.html | safe }}
-                                {% else %}
-                                <div id="account-type-heatmap" style="width: 100%; height: 400px; display: flex; align-items: center; justify-content: center; border: 2px solid #ddd; background: white;">
-                                    <p style="text-align: center; color: var(--text-muted); padding: 2rem;">
-                                        Account type distribution data not available.
-                                    </p>
-                                </div>
-                                {% endif %}
-                            </div>
-                            <!-- Debug: Check if heatmap data exists -->
-                            {% if account_type_heatmap %}
-                            <p style="font-size: 12px; color: #666; margin-top: 10px;">
-                                ✅ Heatmap data available
-                            </p>
-                            {% else %}
-                            <p style="font-size: 12px; color: #666; margin-top: 10px;">
-                                ❌ No heatmap data available
-                            </p>
-                            {% endif %}
-                        </div>
-                    </div>
+                </div>
+                
+                <!-- Why These Metrics Matter -->
+                <div class="metric-group">
+                    <h4>Why These Metrics Matter</h4>
+                    <p><strong>Business-Level Portfolio Dashboard:</strong> This dashboard provides granular insights into portfolio performance by business and vintage. It helps identify high-performing business relationships, track portfolio maturation patterns, and spot early warning signs of deterioration. Understanding vintage performance is crucial for credit risk management and strategic portfolio decisions.</p>
+                    <p><strong>Vintage Analysis:</strong> By grouping accounts by origination month, we can track how different cohorts perform over time. This helps assess underwriting quality, identify seasonal patterns, and make data-driven decisions about credit policies and risk management strategies.</p>
                 </div>
                 {% endif %}
                 
                 <!-- Additional Business Metrics -->
                 <div class="metric-group">
-                    <h4>Additional Business Metrics (Recommended)</h4>
-                    <p><strong>Why these metrics matter:</strong></p>
+                    <h4>Additional Business Metrics</h4>
+                    <p><strong>Are there any other metrics you'd recommend tracking?</strong></p>
+                    <p>Yes, I recommend implementing <strong>product-type and customer-level segmentation metrics</strong> to optimize portfolio performance and marketing strategies:</p>
+                    
+                    <div class="metric-group">
+                        <h4>Product-Type Segmentation</h4>
+                        <ul>
+                            <li><strong>Total Balance and Total Limit per Product Type:</strong> Monitor exposure and utilization by product category</li>
+                            <li><strong>Revenue-weighted APR per Product Type:</strong> Track pricing effectiveness across different products</li>
+                            <li><strong>Customer Count per Product Type:</strong> Understand product adoption and market penetration</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="metric-group">
+                        <h4>Customer-Level Segmentation</h4>
+                        <ul>
+                            <li><strong>Segmentation by Customer Tenure:</strong> Analyze performance differences between new vs. established customers</li>
+                            <li><strong>Risk Tier Segmentation:</strong> Track performance across different risk categories</li>
+                            <li><strong>Channel of Acquisition:</strong> Compare performance by acquisition source (direct, partner, etc.)</li>
+                        </ul>
+                    </div>
+                    
+                    <p><strong>Business Impact:</strong> These segmentation metrics help determine where to prioritize acquisition efforts, optimize marketing spend allocation, and identify top-performing customer segments for targeted growth strategies.</p>
+                    
                     <ul>
                         <li><strong>Business Concentration Risk:</strong> Monitor exposure to specific businesses</li>
-                        <li><strong>Vintage Performance:</strong> Compare performance across different account opening periods</li>
                         <li><strong>Revenue per Business:</strong> Identify high-value business relationships</li>
                         <li><strong>Account Utilization:</strong> Balance/Limit ratio per business</li>
                         <li><strong>Business Growth:</strong> Track account growth over time per business</li>
@@ -870,45 +910,46 @@
                 <p><strong>JTBD:</strong> Provide additional insights and recommendations for portfolio management based on the analysis.</p>
                 
                 <div class="metric-group">
-                    <h4>Key Portfolio Insights</h4>
-                    <p><strong>Based on our analysis, here are the key insights and recommendations:</strong></p>
+                    <h4>Key Portfolio-Level Metrics</h4>
+                    <p><strong>Based on our analysis, here are the high-value portfolio-level metrics for comprehensive risk and performance monitoring:</strong></p>
                     
-                    <div class="metrics-grid">
-                        <div class="metric-group">
-                            <h5>Risk Management Insights</h5>
-                            <ul>
-                                <li><strong>Portfolio Diversification:</strong> Monitor concentration risk across business types and vintages</li>
-                                <li><strong>Vintage Performance:</strong> Track performance by account origination period</li>
-                                <li><strong>Status Distribution:</strong> Monitor account status trends for early warning signals</li>
-                            </ul>
-                        </div>
-                        
-                        <div class="metric-group">
-                            <h5>Revenue Optimization</h5>
-                            <ul>
-                                <li><strong>Yield Management:</strong> Optimize portfolio yield through product mix</li>
-                                <li><strong>Business Growth:</strong> Identify high-performing business relationships</li>
-                                <li><strong>Account Utilization:</strong> Monitor balance/limit ratios for efficiency</li>
-                            </ul>
-                        </div>
+                    <div class="metric-group">
+                        <h4>Core Credit Modeling Metrics</h4>
+                        <ul>
+                            <li><strong>PD (Probability of Default):</strong> Likelihood a borrower will default over a set time horizon. <em>Essential for risk-based pricing and provisioning.</em></li>
+                            <li><strong>LGD (Loss Given Default):</strong> Percentage of exposure lost after default (1 – recovery rate). <em>Helps estimate actual financial loss from defaults.</em></li>
+                            <li><strong>EAD (Exposure at Default):</strong> Expected outstanding balance at time of default. <em>Needed to calculate expected loss (EL = PD × LGD × EAD).</em></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="metric-group">
+                        <h4>Portfolio Performance Metrics</h4>
+                        <ul>
+                            <li><strong>Vintage Loss Rate:</strong> Cumulative loss percentage for loans originated in a given month/quarter. <em>Helps track portfolio quality over time.</em></li>
+                            <li><strong>Utilization Rate:</strong> Balance ÷ Credit Limit. <em>Indicates how much credit customers are actively using; useful for identifying risk or growth potential.</em></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="metric-group">
+                        <h4>Risk Management Insights</h4>
+                        <ul>
+                            <li><strong>Portfolio Diversification:</strong> Monitor concentration risk across business types and vintages</li>
+                            <li><strong>Status Distribution:</strong> Monitor account status trends for early warning signals</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="metric-group">
+                        <h4>Revenue Optimization</h4>
+                        <ul>
+                            <li><strong>Yield Management:</strong> Optimize portfolio yield through product mix</li>
+                            <li><strong>Business Growth:</strong> Identify high-performing business relationships</li>
+                            <li><strong>Account Utilization:</strong> Monitor balance/limit ratios for efficiency</li>
+                        </ul>
                     </div>
                 </div>
             </div>
             
-            <!-- Charts Section -->
-            {% if portfolio_chart %}
-            <div class="chart-container">
-                <h3>Portfolio Risk Metrics Over Time</h3>
-                <div id="part1-portfolio-chart"></div>
-            </div>
-            {% endif %}
-            
-            {% if yield_chart %}
-            <div class="chart-container">
-                <h3>Yield Metrics Comparison</h3>
-                <div id="part1-yield-chart"></div>
-            </div>
-            {% endif %}
+
         </section>
 
         <!-- Part 2: Orders Data Analysis -->
@@ -931,9 +972,10 @@
                             <h5>LTV Summary Statistics</h5>
                             <table class="metrics-table">
                                 <tbody>
-                                    <tr><td>Average LTV</td><td class="metric-value">${{ "{:,.2f}".format(summary_stats.get('average_ltv', 0)|float) }}</td></tr>
                                     <tr><td>Total Revenue</td><td class="metric-value">${{ "{:,.2f}".format(summary_stats.get('net_revenue', 0)|float) }}</td></tr>
                                     <tr><td>Total Customers</td><td class="metric-value">{{ summary_stats.get('total_customers', 0)|int }}</td></tr>
+                                    <tr><td>Total Number Orders</td><td class="metric-value">{{ summary_stats.get('total_orders', 0)|int }}</td></tr>
+                                    <tr><td>Average LTV</td><td class="metric-value">${{ "{:,.2f}".format(summary_stats.get('average_ltv', 0)|float) }}</td></tr>
                                     <tr><td>Average Orders per Customer</td><td class="metric-value">{{ "{:.2f}".format(summary_stats.get('avg_orders_per_customer', 0)|float) }}</td></tr>
                                 </tbody>
                             </table>
@@ -946,17 +988,13 @@
                                 <thead>
                                     <tr>
                                         <th>Cohort Month</th>
-                                        <th>Customers</th>
-                                        <th>Total LTV</th>
                                         <th>Average LTV</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for _, row in cohort_metrics.head(10).iterrows() %}
+                                    {% for _, row in cohort_metrics.iterrows() %}
                                     <tr>
                                         <td>{{ row.get('cohort_month', 'N/A') }}</td>
-                                        <td class="metric-value">{{ row.get('customer_count', 0)|int }}</td>
-                                        <td class="metric-value">${{ "{:,.2f}".format(row.get('total_ltv', 0)|float) }}</td>
                                         <td class="metric-value">${{ "{:,.2f}".format(row.get('avg_ltv', 0)|float) }}</td>
                                     </tr>
                                     {% endfor %}
@@ -970,12 +1008,7 @@
                 </div>
                 {% endif %}
                 
-                {% if ltv_chart %}
-                <div class="chart-container">
-                    <h4>LTV Trends by Cohort</h4>
-                    <div id="part2-ltv-chart"></div>
-                </div>
-                {% endif %}
+
             </div>
             
             <!-- Section 2B: Average Order Value (AOV) -->
@@ -993,10 +1026,9 @@
                             <h5>AOV Summary Statistics</h5>
                             <table class="metrics-table">
                                 <tbody>
-                                    <tr><td>Average AOV</td><td class="metric-value">${{ "{:,.2f}".format(summary_stats.get('average_aov', 0)|float) }}</td></tr>
-                                    <tr><td>Total Orders</td><td class="metric-value">{{ summary_stats.get('total_orders', 0)|int }}</td></tr>
                                     <tr><td>Total Revenue</td><td class="metric-value">${{ "{:,.2f}".format(summary_stats.get('net_revenue', 0)|float) }}</td></tr>
-                                    <tr><td>Revenue per Order</td><td class="metric-value">${{ "{:,.2f}".format(summary_stats.get('revenue_per_order', 0)|float) }}</td></tr>
+                                    <tr><td>Total Orders</td><td class="metric-value">{{ summary_stats.get('total_orders', 0)|int }}</td></tr>
+                                    <tr><td>Average AOV</td><td class="metric-value">${{ "{:,.2f}".format(summary_stats.get('average_aov', 0)|float) }}</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -1008,17 +1040,13 @@
                                 <thead>
                                     <tr>
                                         <th>Cohort Month</th>
-                                        <th>Orders</th>
-                                        <th>Total Revenue</th>
                                         <th>Average AOV</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for _, row in cohort_metrics.head(10).iterrows() %}
+                                    {% for _, row in cohort_metrics.iterrows() %}
                                     <tr>
                                         <td>{{ row.get('cohort_month', 'N/A') }}</td>
-                                        <td class="metric-value">{{ row.get('order_count', 0)|int }}</td>
-                                        <td class="metric-value">${{ "{:,.2f}".format(row.get('total_revenue', 0)|float) }}</td>
                                         <td class="metric-value">${{ "{:,.2f}".format(row.get('avg_aov', 0)|float) }}</td>
                                     </tr>
                                     {% endfor %}
@@ -1032,12 +1060,7 @@
                 </div>
                 {% endif %}
                 
-                {% if aov_chart %}
-                <div class="chart-container">
-                    <h4>AOV Trends by Cohort</h4>
-                    <div id="part2-aov-chart"></div>
-                </div>
-                {% endif %}
+
             </div>
             
             <!-- Section 2C: Customer Acquisition Cost (CAC) -->
@@ -1065,23 +1088,19 @@
                         
                         <div class="metric-group">
                             <h5>CAC by Cohort</h5>
-                            {% if cohort_metrics is defined and cohort_metrics|length > 0 %}
+                            {% if customer_acquisition_cost is defined and customer_acquisition_cost.by_cohort|length > 0 %}
                             <table class="metrics-table">
                                 <thead>
                                     <tr>
                                         <th>Cohort Month</th>
-                                        <th>Marketing Spend</th>
-                                        <th>Customers Acquired</th>
                                         <th>CAC</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for _, row in cohort_metrics.head(10).iterrows() %}
+                                    {% for cohort_data in customer_acquisition_cost.by_cohort %}
                                     <tr>
-                                        <td>{{ row.get('cohort_month', 'N/A') }}</td>
-                                        <td class="metric-value">${{ "{:,.2f}".format(row.get('marketing_spend', 0)|float) }}</td>
-                                        <td class="metric-value">{{ row.get('customer_count', 0)|int }}</td>
-                                        <td class="metric-value">${{ "{:,.2f}".format(row.get('cac', 0)|float) }}</td>
+                                        <td>{{ cohort_data.get('cohort_month', 'N/A') }}</td>
+                                        <td class="metric-value">${{ "{:,.2f}".format(cohort_data.get('cac', 0)|float) }}</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
@@ -1095,33 +1114,76 @@
                 {% endif %}
             </div>
             
-            <!-- Section 2D: Conclusion -->
+            <!-- Section 2D: Lending Decision & Business Performance Conclusion -->
             <div class="section-group">
-                <h3>2D. Conclusion</h3>
-                <p><strong>JTBD:</strong> Summarize key insights from the orders data analysis and provide actionable recommendations.</p>
+                <h3>2D. Lending Decision & Business Performance Conclusion</h3>
+                <p><strong>JTBD:</strong> Based on the analysis from Sections 2A, 2B, and 2C, evaluate this business as a lending candidate and provide actionable insights for credit decision-making.</p>
                 
+                <!-- Conclusion: Business Performance & Lending Decision -->
                 <div class="metric-group">
-                    <h4>Key Findings and Recommendations</h4>
+                    <h4>Conclusion: Business Performance & Lending Decision</h4>
+                    <p><strong>Business Evolution Analysis:</strong> Based on the comprehensive analysis of customer lifetime value, order patterns, and acquisition costs, this business demonstrates {{ "strong" if summary_stats.get('average_ltv', 0) > 250 else "moderate" }} growth potential with {{ "favorable" if summary_stats.get('ltv_cac_ratio', 0) > 1.0 else "concerning" }} unit economics.</p>
                     
-                    <div class="metrics-grid">
-                        <div class="metric-group">
-                            <h5>Customer Value Insights</h5>
-                            <ul>
-                                <li><strong>LTV Trends:</strong> Monitor lifetime value patterns by cohort for retention strategies</li>
-                                <li><strong>AOV Optimization:</strong> Focus on increasing average order value through product mix</li>
-                                <li><strong>CAC Efficiency:</strong> Track acquisition costs to optimize marketing spend</li>
-                            </ul>
-                        </div>
-                        
-                        <div class="metric-group">
-                            <h5>Strategic Recommendations</h5>
-                            <ul>
-                                <li><strong>Cohort Analysis:</strong> Use cohort-based insights for targeted marketing</li>
-                                <li><strong>Revenue Optimization:</strong> Focus on high-value customer segments</li>
-                                <li><strong>Marketing ROI:</strong> Monitor LTV/CAC ratios for campaign effectiveness</li>
-                            </ul>
-                        </div>
+                    <p><strong>Key Strengths:</strong> The business shows {{ "excellent" if summary_stats.get('total_customers', 0) > 50000 else "good" }} customer acquisition with {{ "{:,.0f}".format(summary_stats.get('total_customers', 0)) }} total customers and {{ "{:,.0f}".format(summary_stats.get('total_orders', 0)) }} orders, indicating {{ "strong" if summary_stats.get('avg_orders_per_customer', 0) > 1.5 else "moderate" }} customer engagement. The average LTV of ${{ "{:.2f}".format(summary_stats.get('average_ltv', 0)) }} and LTV/CAC ratio of {{ "{:.2f}".format(summary_stats.get('ltv_cac_ratio', 0)) }} suggest {{ "profitable" if summary_stats.get('ltv_cac_ratio', 0) > 1.0 else "challenging" }} customer economics.</p>
+                    
+                    <p><strong>Risk Assessment:</strong> {{ "Customer concentration appears manageable" if summary_stats.get('total_customers', 0) > 50000 else "Customer concentration may be a concern" }} with {{ "{:,.0f}".format(summary_stats.get('total_customers', 0)) }} customers across {{ "{:,.0f}".format(summary_stats.get('number_of_cohorts', 0)) }} cohorts. The {{ "stable" if summary_stats.get('average_aov', 0) > 150 else "volatile" }} average order value of ${{ "{:.2f}".format(summary_stats.get('average_aov', 0)) }} indicates {{ "consistent" if summary_stats.get('average_aov', 0) > 150 else "variable" }} revenue patterns.</p>
+                    
+                    <p><strong>Lending Recommendation:</strong> {{ "This business appears to be a good lending candidate" if summary_stats.get('ltv_cac_ratio', 0) > 1.0 and summary_stats.get('total_customers', 0) > 50000 else "This business requires careful consideration" }} due to {{ "strong unit economics and customer base" if summary_stats.get('ltv_cac_ratio', 0) > 1.0 else "mixed performance indicators" }}. {{ "Recommend approval with standard terms" if summary_stats.get('ltv_cac_ratio', 0) > 1.0 else "Recommend additional due diligence" }} based on the current performance metrics.</p>
+                </div>
+                
+                <!-- Lending Assessment – Key Factors to Consider -->
+                <div class="metric-group">
+                    <h4>Lending Assessment – Key Factors to Consider</h4>
+                    
+                    <div class="metric-group">
+                        <h4>Positive Signals</h4>
+                        <ul>
+                            <li><strong>Strong Customer Base:</strong> {{ "{:,.0f}".format(summary_stats.get('total_customers', 0)) }} customers with {{ "{:,.0f}".format(summary_stats.get('total_orders', 0)) }} total orders</li>
+                            <li><strong>Profitable Unit Economics:</strong> LTV/CAC ratio of {{ "{:.2f}".format(summary_stats.get('ltv_cac_ratio', 0)) }} indicates {{ "strong" if summary_stats.get('ltv_cac_ratio', 0) > 1.0 else "moderate" }} customer profitability</li>
+                            <li><strong>Diversified Revenue:</strong> {{ "{:,.0f}".format(summary_stats.get('total_revenue', 0)) }} in total revenue across {{ "{:,.0f}".format(summary_stats.get('number_of_cohorts', 0)) }} cohorts</li>
+                            <li><strong>Stable Operations:</strong> {{ "{:.2f}".format(summary_stats.get('avg_orders_per_customer', 0)) }} average orders per customer shows {{ "strong" if summary_stats.get('avg_orders_per_customer', 0) > 1.5 else "moderate" }} customer engagement</li>
+                        </ul>
                     </div>
+                    
+                    <div class="metric-group">
+                        <h4>Risk Factors</h4>
+                        <ul>
+                            <li><strong>Customer Concentration:</strong> {{ "Monitor" if summary_stats.get('total_customers', 0) < 100000 else "Manage" }} customer concentration risk with current customer base</li>
+                            <li><strong>Revenue Volatility:</strong> {{ "Track" if summary_stats.get('average_aov', 0) < 200 else "Monitor" }} order value fluctuations across cohorts</li>
+                            <li><strong>Marketing Efficiency:</strong> {{ "Optimize" if summary_stats.get('ltv_cac_ratio', 0) < 1.5 else "Maintain" }} marketing spend allocation based on CAC trends</li>
+                            <li><strong>Growth Sustainability:</strong> {{ "Assess" if summary_stats.get('number_of_cohorts', 0) < 20 else "Monitor" }} long-term growth patterns and cohort performance</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Additional Business Performance Metrics Recommended -->
+                <div class="metric-group">
+                    <h4>Additional Business Performance Metrics Recommended</h4>
+                    <p><strong>Are there any other metrics you'd recommend tracking?</strong></p>
+                    <p>Yes, I recommend implementing <strong>rolling performance metrics and custom business ratios</strong> to enhance credit decision-making and risk assessment:</p>
+                    
+                    <div class="metric-group">
+                        <h4>Rolling Performance Metrics</h4>
+                        <ul>
+                            <li><strong>Rolling GMV:</strong> Monthly/quarterly moving average of gross merchandise value. <em>Critical for assessing revenue stability and growth trends.</em></li>
+                            <li><strong>Rolling Order Volume:</strong> Moving average of monthly order counts. <em>Indicates business activity levels and operational capacity.</em></li>
+                            <li><strong>Rolling Active Customers:</strong> Count of unique customers with transactions in rolling periods. <em>Shows customer retention and engagement patterns.</em></li>
+                            <li><strong>Rolling Repeat Purchase Rate:</strong> Percentage of customers making repeat purchases in rolling windows. <em>Measures customer loyalty and product satisfaction.</em></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="metric-group">
+                        <h4>Custom Business Ratios</h4>
+                        <ul>
+                            <li><strong>Average Order Value (AOV):</strong> GMV ÷ Number of Orders. <em>Indicates pricing strategy effectiveness and customer spending patterns.</em></li>
+                            <li><strong>Repeat Purchase Rate:</strong> Returning Customers ÷ Total Customers. <em>Measures customer retention and product-market fit.</em></li>
+                            <li><strong>Revenue Concentration Ratio:</strong> % of GMV from top 3 customers or products. <em>Assesses diversification risk and customer dependency.</em></li>
+                            <li><strong>GMV Growth Rate:</strong> (GMV_t – GMV_t-1) ÷ GMV_t-1. <em>Shows business momentum and growth sustainability.</em></li>
+                            <li><strong>Monthly Active Customers:</strong> Count of distinct customers with transactions per month. <em>Indicates customer engagement and business activity levels.</em></li>
+                        </ul>
+                    </div>
+                    
+                    <p><strong>Credit Decision Impact:</strong> These metrics provide early warning signals for business health, help assess repayment capacity, and enable proactive risk management for lending decisions.</p>
                 </div>
             </div>
         </section>
@@ -1133,7 +1195,11 @@
             <button onclick="scrollToTop()" class="scroll-btn">⬆️ Back to Top</button>
         </div>
         <div class="watermark">
-            <span>Created by <strong>Highbeam Case Study Analysis</strong></span>
+            <span>Created by <strong>Thiebault Husson</strong></span>
+            <span>•</span>
+            <span><a href="mailto:husson.thiebault@gmail.com" style="color: var(--text-secondary); text-decoration: none;">husson.thiebault@gmail.com</a></span>
+            <span>•</span>
+            <span><a href="https://github.com/thiebault-husson" target="_blank" style="color: var(--text-secondary); text-decoration: none;">@thiebault-husson</a></span>
             <span>•</span>
             <span>Generated on {{ report_date }}</span>
         </div>
@@ -1165,20 +1231,14 @@
 
         // Charts
         {% if portfolio_chart %}
-        Plotly.newPlot('part1-portfolio-chart', {{ portfolio_chart | safe }});
+        Plotly.newPlot('part1-portfolio-chart', JSON.parse('{{ portfolio_chart | safe }}'));
         {% endif %}
         
         {% if yield_chart %}
-        Plotly.newPlot('part1-yield-chart', {{ yield_chart | safe }});
+        Plotly.newPlot('part1-yield-chart', JSON.parse('{{ yield_chart | safe }}'));
         {% endif %}
         
-        {% if ltv_chart %}
-        Plotly.newPlot('part2-ltv-chart', {{ ltv_chart | safe }});
-        {% endif %}
-        
-        {% if aov_chart %}
-        Plotly.newPlot('part2-aov-chart', {{ aov_chart | safe }});
-        {% endif %}
+
         
         // Heatmap is now HTML-based, no JavaScript needed
     </script>
