@@ -276,13 +276,13 @@ class HTMLReportGenerator:
 
     def _create_account_type_heatmap(self, business_metrics: pd.DataFrame) -> Dict:
         """
-        Create an interactive heatmap for account type distribution.
+        Create a simple HTML table-based heatmap for account type distribution.
         
         Args:
             business_metrics: Business metrics DataFrame
             
         Returns:
-            Dictionary with heatmap data
+            Dictionary with heatmap HTML
         """
         if business_metrics.empty:
             return {}
@@ -301,45 +301,53 @@ class HTMLReportGenerator:
             # Count account types
             account_type_counts = pd.Series(account_types_list).value_counts()
             
-            # Create a more robust heatmap with better spacing
-            fig = go.Figure(data=go.Heatmap(
-                z=[[int(v) for v in account_type_counts.values]],
-                x=['Account Types'],
-                y=[str(k) for k in account_type_counts.index],
-                colorscale='Viridis',
-                showscale=True,
-                text=[[str(int(val)) for val in account_type_counts.values]],
-                texttemplate='%{text}',
-                textfont={'size': 14, 'color': 'white'},
-                hoverongaps=False,
-                hoverinfo='z+text'
-            ))
+            # Define the account types in the order you specified
+            account_types = ['CardFlex', 'LineRevolving', 'CardExtend', 'CardLegacy']
             
-            fig.update_layout(
-                title={
-                    'text': 'Account Type Distribution Heatmap',
-                    'x': 0.5,
-                    'xanchor': 'center',
-                    'font': {'size': 16}
-                },
-                xaxis={
-                    'title': 'Categories',
-                    'showgrid': False,
-                    'zeroline': False
-                },
-                yaxis={
-                    'title': 'Account Types',
-                    'showgrid': False,
-                    'zeroline': False
-                },
-                height=500,
-                width=600,
-                margin={'l': 120, 'r': 80, 't': 80, 'b': 80},
-                plot_bgcolor='white',
-                paper_bgcolor='white'
-            )
+            # Create HTML table heatmap
+            html_content = """
+            <div style="width: 100%; max-width: 600px; margin: 0 auto;">
+                <table style="width: 100%; border-collapse: collapse; border: 2px solid #333;">
+                    <thead>
+                        <tr style="background-color: #f8f9fa;">
+                            <th style="border: 1px solid #333; padding: 12px; text-align: center; font-weight: bold;">Account Type</th>
+                            <th style="border: 1px solid #333; padding: 12px; text-align: center; font-weight: bold;">Count</th>
+                            <th style="border: 1px solid #333; padding: 12px; text-align: center; font-weight: bold;">Percentage</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            """
             
-            return fig.to_dict()
+            total_count = int(sum(account_type_counts.values))
+            
+            for account_type in account_types:
+                count = int(account_type_counts.get(account_type, 0))
+                percentage = (count / total_count * 100) if total_count > 0 else 0
+                
+                # Create color intensity based on count
+                intensity = min(255, 100 + (count * 20))  # Scale from light to dark
+                bg_color = f"rgb({intensity}, {intensity}, {intensity})"
+                text_color = "white" if intensity < 150 else "black"
+                
+                html_content += f"""
+                        <tr style="background-color: {bg_color};">
+                            <td style="border: 1px solid #333; padding: 12px; text-align: center; color: {text_color}; font-weight: bold;">{account_type}</td>
+                            <td style="border: 1px solid #333; padding: 12px; text-align: center; color: {text_color}; font-weight: bold;">{count}</td>
+                            <td style="border: 1px solid #333; padding: 12px; text-align: center; color: {text_color}; font-weight: bold;">{percentage:.1f}%</td>
+                        </tr>
+                """
+            
+            html_content += """
+                    </tbody>
+                </table>
+                <div style="margin-top: 15px; text-align: center; font-size: 12px; color: #666;">
+                    <strong>Total Accounts:</strong> """ + str(total_count) + """
+                </div>
+            </div>
+            """
+            
+            return {'html': html_content}
+            
         except Exception as e:
             print(f"Error creating account type heatmap: {e}")
             return {} 
