@@ -1,163 +1,220 @@
 # Credit Portfolio Analysis
 
-A modern Python implementation for credit portfolio analysis with modular architecture.
+A comprehensive credit portfolio analysis tool that provides detailed insights into loan portfolio performance, customer behavior, and business metrics.
 
-## Overview
+## 📊 Overview
 
-This project implements comprehensive credit portfolio analysis with the following capabilities:
+This project analyzes credit portfolio data across two main components:
 
-- **Portfolio Metrics**: Delinquency rate, default rate, charge-off rate, gross/net portfolio yield
-- **Business Metrics**: Per-business performance by monthly vintage
-- **Insights**: Discover patterns and trends from loan portfolio data
+- **Part 1: Loan Tape Analysis** - Portfolio risk metrics and yield analysis
+- **Part 2: Orders Data Analysis** - Customer lifetime value, order patterns, and business metrics
 
-## Architecture
-
-The project follows a clean, modular architecture:
+## 🏗️ Project Structure
 
 ```
 credit-portfolio-analysis/
+├── assets/
+│   ├── part-1/
+│   │   └── test_loan_tape.csv          # Loan portfolio data
+│   └── part-2/
+│       ├── test_orders.csv              # Order transaction data
+│       └── test_bank_transactions.csv   # Banking transaction data
 ├── src/
-│   ├── analyzer.py              # Main analysis class
-│   ├── data_processor.py        # Data loading and preprocessing
-│   └── metrics.py               # Metric calculations
-├── test/
-│   └── test_part_a.py           # Part A tests
-├── main.py                      # Entry point
-├── run_tests.py                 # Test runner
-├── requirements.txt
-└── README.md
+│   ├── part_1_loan_tape_analysis/      # Loan portfolio analysis modules
+│   ├── part_2_orders_data_analysis/     # Orders and business analysis modules
+│   ├── reporting/                       # HTML report generation
+│   └── utils/                          # Utility functions
+├── reports/                            # Generated HTML reports
+├── test/                               # Test files
+├── main.py                             # Main execution script
+└── requirements.txt                    # Python dependencies
 ```
 
-## Key Classes
+## 🚀 Quick Start
 
-### LoanPortfolioAnalyzer
-Main class that orchestrates the analysis:
-- Loads and preprocesses loan tape data
-- Calculates portfolio metrics by month
-- Calculates business metrics by vintage
-- Generates insights and patterns
+### Prerequisites
 
-### LoanDataProcessor
-Handles data loading and preprocessing:
-- Parses currency strings (`$750,000.00` → `750000.0`)
-- Parses percentage strings (`5.09%` → `0.0509`)
-- Converts dates and handles missing values
+- Python 3.8+
+- pip or conda
 
-### PortfolioMetricsCalculator & BusinessMetricsCalculator
-Calculate the required metrics:
-- Portfolio-level metrics (delinquency, default, charge-off rates)
-- Business-level metrics (limit, balance, age, revenue, APR, status)
+### Installation
 
-## Usage
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/thiebault-husson/credit-portfolio-analysis.git
+   cd credit-portfolio-analysis
+   ```
 
-### Quick Start
-
-1. **Install dependencies**:
+2. **Install dependencies:**
    ```bash
    pip install -r requirements.txt
    ```
 
-2. **Run the analysis**:
+3. **Run the analysis:**
    ```bash
    python main.py
    ```
 
-3. **Run tests**:
-   ```bash
-   python run_tests.py
-   ```
+## 📈 Features
 
-### Programmatic Usage
+### Part 1: Loan Portfolio Analysis
 
-```python
-from src.analyzer import LoanPortfolioAnalyzer
+- **Portfolio Risk Metrics**
+  - Delinquency rates by month
+  - Default rates and charge-off rates
+  - Account status distribution
+  - Portfolio-wide risk indicators
 
-# Initialize analyzer
-analyzer = LoanPortfolioAnalyzer("assets/part-1/test_loan_tape.csv")
+- **Portfolio Yield Metrics**
+  - Average APR calculations
+  - Weighted average APR
+  - Total interest revenue
+  - Average balance analysis
 
-# Run complete analysis
-results = analyzer.analyze_portfolio()
+- **Business-Level Dashboard**
+  - Vintage performance analysis
+  - Account type distribution
+  - Portfolio performance trends
 
-# Get specific metrics
-portfolio_metrics = analyzer.get_portfolio_metrics()
-business_metrics = analyzer.get_business_metrics()
-insights = analyzer.get_insights()
-```
+### Part 2: Orders Data Analysis
 
-## Output
+- **Customer Lifetime Value (LTV)**
+  - Cohort-based LTV analysis
+  - Average LTV calculations
+  - LTV trends over time
 
-The analysis produces:
+- **Average Order Value (AOV)**
+  - Cohort-based AOV analysis
+  - AOV trends and patterns
+  - Revenue optimization insights
 
-### Portfolio Metrics by Month
-- Delinquency rate
-- Default rate
-- Charge-off rate
-- Gross portfolio yield
-- Net portfolio yield (SOFR + 5% cost of capital)
-- Portfolio size and revenue
+- **Customer Acquisition Cost (CAC)**
+  - Marketing spend analysis
+  - CAC by cohort
+  - LTV/CAC ratio analysis
 
-### Business Metrics by Vintage
-- Limit and average daily balance
-- Credit account age
-- Revenue (interest + interchange)
-- APR and borrower status
-- Payment rate
+- **Business Performance Metrics**
+  - Total revenue and orders
+  - Customer count and behavior
+  - Revenue concentration analysis
 
-### Key Insights
-- Portfolio growth trends
-- Account type distribution
-- Status distribution
-- Revenue analysis
-- Risk analysis
+## 📊 Report Generation
 
-## Data Processing
+The analysis generates comprehensive HTML reports containing:
 
-The implementation handles the loan tape data format:
-- **Currency parsing**: `$750,000.00` → `750000.0`
-- **Percentage parsing**: `5.09%` → `0.0509`
-- **Date handling**: Proper datetime conversion
-- **Missing values**: Graceful handling of empty fields
+- **Executive Summary** with key metrics from both parts
+- **Interactive visualizations** using Plotly charts
+- **Detailed analysis sections** for each component
+- **Business insights and recommendations**
 
-## Testing
+### Report Sections
 
-The project includes organized test suites:
+1. **Executive Summary**
+   - Revenue Metrics (Part 2)
+   - Portfolio Risk Metrics (Part 1)
+   - Customer Metrics (Part 2)
 
-### Part A Tests (`test/test_part_a.py`)
-- Data processing functionality
-- Analyzer initialization
-- Portfolio metrics calculation
-- Business metrics calculation
-- Insights generation
+2. **Part 1: Loan Tape Analysis**
+   - Portfolio risk and yield metrics
+   - Business-level dashboard
+   - Additional portfolio metrics
 
-Run all tests:
+3. **Part 2: Orders Data Analysis**
+   - LTV and AOV analysis
+   - CAC analysis
+   - Cohort performance metrics
+
+4. **Lending Decision & Business Performance**
+   - Business performance evaluation
+   - Lending assessment factors
+   - Additional metrics recommendations
+
+## 🔧 Configuration
+
+### Data Files
+
+Place your data files in the `assets/` directory:
+
+- `assets/part-1/test_loan_tape.csv` - Loan portfolio data
+- `assets/part-2/test_orders.csv` - Order transaction data
+- `assets/part-2/test_bank_transactions.csv` - Banking transaction data
+
+### Command Line Options
+
 ```bash
-python run_tests.py
+python main.py [OPTIONS]
+
+Options:
+  --start-date DATE     Analysis start date (YYYY-MM-DD)
+  --end-date DATE       Analysis end date (YYYY-MM-DD)
+  --report-date DATE    Report generation date (YYYY-MM-DD)
+  --data-dir PATH       Data directory path
+  --output-dir PATH     Output directory path
 ```
 
-Run specific test suite:
+## 📋 Data Requirements
+
+### Loan Tape Data (Part 1)
+- Account identifiers
+- Account status (Current, Delinquent, Default, etc.)
+- Balance information
+- APR data
+- Account types
+- Vintage dates
+
+### Orders Data (Part 2)
+- Order identifiers
+- Customer identifiers
+- Order amounts
+- Revenue data
+- Order dates
+- Cohort information
+
+### Bank Transactions Data (Part 2)
+- Transaction identifiers
+- Marketing spend categories
+- Transaction amounts
+- Transaction dates
+
+## 🧪 Testing
+
+Run the test suite:
+
 ```bash
-python test/test_part_a.py
+python -m pytest test/
 ```
 
-## Requirements
+## 📝 Output
 
-- Python 3.9+
-- pandas >= 2.0.0
-- numpy >= 1.24.0
-- python-dateutil >= 2.8.0
+The analysis generates:
 
-## Design Decisions
+1. **HTML Reports** in the `reports/` directory
+2. **Console output** with summary statistics
+3. **Interactive visualizations** embedded in reports
 
-1. **Clean Architecture**: Simple, focused classes with clear responsibilities
-2. **Type Hints**: Comprehensive typing for better code quality
-3. **Error Handling**: Graceful handling of data issues
-4. **Modularity**: Easy to extend with new metrics or insights
-5. **Testability**: Well-structured for unit testing
+## 🤝 Contributing
 
-## Next Steps
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
-This implementation provides a solid foundation for:
-- Adding additional data sources
-- Implementing visualizations
-- Adding more sophisticated metrics
-- Creating comprehensive reports 
+## 📄 License
+
+This project is licensed under the MIT License.
+
+## 👨‍💻 Author
+
+**Thiebault Husson**
+- Email: husson.thiebault@gmail.com
+- GitHub: [@thiebault-husson](https://github.com/thiebault-husson)
+
+## 🔗 Repository
+
+- **GitHub:** https://github.com/thiebault-husson/credit-portfolio-analysis
+- **Branch:** feat/part-1-portfolio-analysis
+
+---
+
+*Generated on: 2025-07-29* 

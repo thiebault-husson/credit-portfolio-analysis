@@ -1,109 +1,178 @@
 #!/usr/bin/env python3
 """
-Main entry point for Credit Portfolio Analysis
+Highbeam Case Study - Credit Portfolio Analysis
+Main entry point for generating comprehensive analysis reports.
 """
 
-import json
+import argparse
+import sys
 import pandas as pd
-from src.analyzer import LoanPortfolioAnalyzer
+from pathlib import Path
+from datetime import datetime
+from typing import Dict, Any, Optional
+
+# Add the src directory to the Python path
+sys.path.append(str(Path(__file__).parent / "src"))
+
+from src.part_1_loan_tape_analysis.loan_tape_analyzer import LoanPortfolioAnalyzer
+from src.part_2_orders_data_analysis.orders_data_analyzer import OrdersAnalyzer
+from src.reporting.html_report_generator import HTMLReportGenerator
 
 
 def main():
-    """Run the complete portfolio analysis."""
+    """Main function to run the complete analysis."""
+    parser = argparse.ArgumentParser(
+        description="Highbeam Case Study - Credit Portfolio Analysis",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  python main.py --data-dir ./assets
+  python main.py --data-dir ./assets --output-dir ./reports
+  python main.py --data-dir ./assets --start-date 2024-01-01 --end-date 2024-12-31
+        """
+    )
     
-    print("=" * 60)
-    print("CREDIT PORTFOLIO ANALYSIS")
-    print("=" * 60)
+    parser.add_argument(
+        "--data-dir",
+        type=str,
+        default="./assets",
+        help="Directory containing the data files (default: ./assets)"
+    )
     
-    # Initialize analyzer
-    print("\n1. Loading loan tape data...")
-    analyzer = LoanPortfolioAnalyzer("assets/part-1/test_loan_tape.csv")
+    parser.add_argument(
+        "--output-dir",
+        type=str,
+        default="./reports",
+        help="Directory to save the generated reports (default: ./reports)"
+    )
     
-    # Get summary statistics
-    summary = analyzer.get_summary_stats()
-    print(f"   Loaded {summary['total_records']} records")
-    print(f"   Date range: {summary['date_range']['start']} to {summary['date_range']['end']}")
-    print(f"   Unique businesses: {summary['unique_businesses']}")
-    print(f"   Unique accounts: {summary['unique_accounts']}")
+    parser.add_argument(
+        "--start-date",
+        type=str,
+        help="Start date for analysis (YYYY-MM-DD format)"
+    )
     
-    # Run complete analysis
-    print("\n2. Running portfolio analysis...")
-    results = analyzer.analyze_portfolio()
+    parser.add_argument(
+        "--end-date", 
+        type=str,
+        help="End date for analysis (YYYY-MM-DD format)"
+    )
     
-    # Display portfolio metrics
-    print("\n" + "=" * 40)
-    print("PORTFOLIO METRICS BY MONTH")
-    print("=" * 40)
+    parser.add_argument(
+        "--report-date",
+        type=str,
+        default=datetime.now().strftime("%Y-%m-%d"),
+        help="Report generation date (default: today)"
+    )
     
-    portfolio_metrics = results['portfolio_metrics']
-    if portfolio_metrics:
-        # Display the most recent month's metrics
-        latest_month = portfolio_metrics[-1]
-        print(f"Latest Month ({latest_month['month']}):")
-        print(f"  Total Accounts: {latest_month['total_accounts']}")
-        print(f"  Portfolio Size: ${latest_month['portfolio_size']:,.2f}")
-        print(f"  Delinquency Rate: {latest_month['delinquency_rate']:.2%}")
-        print(f"  Default Rate: {latest_month['default_rate']:.2%}")
-        print(f"  Charge-off Rate: {latest_month['charge_off_rate']:.2%}")
-        print(f"  Gross Yield: {latest_month['gross_yield']:.2%}")
-        print(f"  Net Yield: {latest_month['net_yield']:.2%}")
-        print(f"  Total Revenue: ${latest_month['total_revenue']:,.2f}")
+    args = parser.parse_args()
     
-    # Display business metrics
-    print("\n" + "=" * 40)
-    print("BUSINESS METRICS BY VINTAGE")
-    print("=" * 40)
+    # Validate data directory
+    data_dir = Path(args.data_dir)
+    if not data_dir.exists():
+        print(f"Error: Data directory '{data_dir}' does not exist.")
+        sys.exit(1)
     
-    business_metrics = results['business_metrics']
-    if not business_metrics.empty:
-        print(f"Total business-vintage combinations: {len(business_metrics)}")
-        print("\nSample business metrics:")
-        print(business_metrics.head().to_string(index=False))
+    # Create output directory
+    output_dir = Path(args.output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
     
-    # Display insights
-    print("\n" + "=" * 40)
-    print("KEY INSIGHTS")
-    print("=" * 40)
+    print("🚀 Starting Highbeam Case Study Analysis...")
+    print(f"📁 Data directory: {data_dir}")
+    print(f"📊 Output directory: {output_dir}")
     
-    insights = results['insights']
-    
-    # Portfolio growth insights
-    growth = insights['portfolio_growth']
-    print(f"Portfolio Growth:")
-    print(f"  Total Portfolio Size: ${growth['total_portfolio_size']:,.2f}")
-    print(f"  Total Businesses: {growth['total_businesses']}")
-    print(f"  Total Accounts: {growth['total_accounts']}")
-    print(f"  Average Account Size: ${growth['average_account_size']:,.2f}")
-    print(f"  Growth Trend: {growth['portfolio_growth_trend']}")
-    
-    # Account type distribution
-    print(f"\nAccount Type Distribution:")
-    for account_type, count in insights['account_type_distribution'].items():
-        print(f"  {account_type}: {count}")
-    
-    # Status distribution
-    print(f"\nAccount Status Distribution:")
-    for status, count in insights['status_distribution'].items():
-        print(f"  {status}: {count}")
-    
-    # Revenue analysis
-    revenue = insights['revenue_analysis']
-    print(f"\nRevenue Analysis:")
-    print(f"  Total Revenue: ${revenue['total_revenue']:,.2f}")
-    print(f"  Interest Revenue: ${revenue['interest_revenue']:,.2f}")
-    print(f"  Interchange Revenue: ${revenue['interchange_revenue']:,.2f}")
-    print(f"  Revenue per Account: ${revenue['revenue_per_account']:,.2f}")
-    
-    # Risk analysis
-    risk = insights['risk_analysis']
-    print(f"\nRisk Analysis:")
-    print(f"  Delinquency Rate: {risk['delinquency_rate']:.2%}")
-    print(f"  Default Rate: {risk['default_rate']:.2%}")
-    print(f"  Charge-off Rate: {risk['charge_off_rate']:.2%}")
-    
-    print("\n" + "=" * 60)
-    print("ANALYSIS COMPLETE")
-    print("=" * 60)
+    try:
+        # Initialize report generator
+        report_generator = HTMLReportGenerator()
+        
+        # Part 1: Loan Tape Analysis
+        print("\n📈 Part 1: Analyzing loan tape data...")
+        loan_analyzer = LoanPortfolioAnalyzer(str(data_dir / "part-1" / "test_loan_tape.csv"))
+        part1_results = loan_analyzer.analyze_portfolio(
+            start_date=args.start_date,
+            end_date=args.end_date
+        )
+        
+        # Part 2: Orders Data Analysis  
+        print("🛒 Part 2: Analyzing orders and banking data...")
+        orders_analyzer = OrdersAnalyzer(
+            orders_path=str(data_dir / "part-2" / "test_orders.csv"),
+            bank_transactions_path=str(data_dir / "part-2" / "test_bank_transactions.csv")
+        )
+        part2_results = orders_analyzer.analyze_orders()
+        
+        # Display Part 2 summary statistics
+        summary_stats = part2_results.get('summary_stats', {})
+        customer_acquisition_cost = part2_results.get('customer_acquisition_cost', {})
+        cac_summary = customer_acquisition_cost.get('summary', {})
+        
+        print(f"📊 Part 2 Summary Statistics:")
+        print(f"   - Total Customers: {summary_stats.get('total_customers', 0):,}")
+        print(f"   - Total Orders: {summary_stats.get('total_orders', 0):,}")
+        print(f"   - Total Revenue: ${summary_stats.get('net_revenue', 0):,.2f}")
+        print(f"   - Average LTV: ${summary_stats.get('average_ltv', 0):,.2f}")
+        print(f"   - Average AOV: ${summary_stats.get('average_aov', 0):,.2f}")
+        print(f"   - Average Orders per Customer: {summary_stats.get('avg_orders_per_customer', 0):.2f}")
+        print(f"   - Estimated CAC: ${cac_summary.get('estimated_cac', 0):,.2f}")
+        print(f"   - LTV/CAC Ratio: {cac_summary.get('ltv_cac_ratio', 0):.2f}")
+        print(f"   - Total Marketing Spend: ${cac_summary.get('total_marketing_spend', 0):,.2f}")
+        
+        # Display cohort information
+        cohort_metrics = part2_results.get('cohort_metrics', pd.DataFrame())
+        if not cohort_metrics.empty:
+            print(f"   - Number of Cohorts: {len(cohort_metrics)}")
+            print(f"   - Cohort Date Range: {cohort_metrics['cohort_month'].min()} to {cohort_metrics['cohort_month'].max()}")
+        
+        # Generate combined report
+        print("📋 Generating combined analysis report...")
+        
+        # Prepare data for combined report
+        combined_data = {
+            'part1_data': part1_results,
+            'part2_data': part2_results,
+            'part1_charts': {
+                'portfolio_metrics': report_generator._create_portfolio_metrics_chart(part1_results['portfolio_metrics']),
+                'yield_metrics': report_generator._create_yield_metrics_chart(part1_results['yield_metrics']),
+                'account_type_heatmap': report_generator._create_account_type_heatmap(part1_results['business_metrics'])
+            },
+            'part2_charts': {
+                'ltv_by_cohort': report_generator._create_ltv_by_cohort_chart(part2_results),
+                'aov_by_cohort': report_generator._create_aov_by_cohort_chart(part2_results['average_order_value'])
+            },
+            'report_date': args.report_date
+        }
+        
+        # Generate combined report with date-time prefix
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        report_filename = f"{timestamp}_highbeam_case_study_analysis.html"
+        report_path = output_dir / report_filename
+        
+        report_generator.generate_combined_report(
+            combined_data,
+            str(report_path)
+        )
+        
+        print(f"✅ Combined report generated: {report_path}")
+        print(f"📊 Report contains:")
+        print(f"   - Portfolio metrics and yield analysis")
+        print(f"   - Customer lifetime value and order patterns")
+        print(f"   - Interactive charts and visualizations")
+        print(f"   - Executive summary and key insights")
+        
+        # Open the report in browser
+        try:
+            import webbrowser
+            webbrowser.open(f"file://{report_path.absolute()}")
+            print(f"🌐 Opened report in browser")
+        except Exception as e:
+            print(f"⚠️  Could not open browser: {e}")
+            print(f"📄 Please open the report manually: {report_path}")
+        
+    except Exception as e:
+        print(f"❌ Error during analysis: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
 
 
 if __name__ == "__main__":
