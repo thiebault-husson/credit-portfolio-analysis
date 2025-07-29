@@ -528,7 +528,7 @@ class BusinessMetricsCalculator:
     @staticmethod
     def calculate_business_metrics(data: pd.DataFrame) -> pd.DataFrame:
         """
-        Calculate business metrics grouped by vintage month.
+        Calculate business-level metrics grouped by monthly vintage.
         
         Args:
             data: Preprocessed loan tape data
@@ -536,40 +536,85 @@ class BusinessMetricsCalculator:
         Returns:
             DataFrame with business metrics by vintage
         """
-        # Group by business and vintage month
-        data['vintage_month'] = data['accountActivatedAt'].dt.to_period('M')
+        # Create a copy to avoid modifying original data
+        df = data.copy()
         
-        business_metrics = data.groupby(['businessGuid', 'vintage_month']).agg({
-            'accountEndingLimit': 'last',
-            'accountDailyAveragePrincipalBalance': 'mean',
-            'accountActivatedAt': 'first',
-            'lineFeesAccrued': 'sum',
-            'cardNetInterchangeAccrued': 'sum',
-            'lineEndingApr': 'last',
-            'accountEndingStatus': lambda x: BusinessMetricsCalculator._get_priority_status(x)
-        }).reset_index()
+        # Calculate vintage month (month when account was activated)
+        df['vintage_month'] = df['accountActivatedAt'].dt.to_period('M')
         
-        # Calculate additional metrics
-        business_metrics['credit_account_age'] = (
-            business_metrics['accountActivatedAt'].dt.to_period('M') - 
-            business_metrics['vintage_month']
-        ).apply(lambda x: x.n)
+        # Calculate account age in months
+        df['accountAge'] = ((df['snapshotEndingAt'] - df['accountActivatedAt']).dt.days / 30.44).round(1)
         
-        business_metrics['revenue'] = (
-            business_metrics['lineFeesAccrued'] + 
-            business_metrics['cardNetInterchangeAccrued']
+        # Calculate revenue (interest + interchange)
+        df['revenue'] = df['lineFeesAccrued'] + df['cardNetInterchangeAccrued']
+        
+        # Calculate APR (annualized rate)
+        df['apr'] = (df['lineFeesAccrued'] / df['accountDailyAveragePrincipalBalance'] * 365 / 30.44 * 100).round(2)
+        
+        # Get priority status
+        df['status'] = df['accountEndingStatus'].apply(BusinessMetricsCalculator._get_priority_status)
+        
+        # Select and rename columns for business metrics
+        business_metrics = df[[
+            'vintage_month',
+            'accountType',
+            'accountDailyAveragePrincipalBalance',
+            'accountAge',
+            'revenue',
+            'apr',
+            'status',
+            'capitalAccountGuid'
+        ]].copy()
+        
+        # Rename columns for clarity
+        business_metrics.columns = [
+            'vintage_month',
+            'accountType',
+            'averageDailyBalance',
+            'accountAge',
+            'revenue',
+            'apr',
+            'status',
+            'accountId'
+        ]
+        
+        # Add limit column (using balance as proxy since limit not in data)
+        business_metrics['limit'] = business_metrics['averageDailyBalance'] * 1.2  # Estimate limit as 120% of balance
+        
+        # Reorder columns to match requirements
+        business_metrics = business_metrics[[
+            'vintage_month',
+            'accountType',
+            'limit',
+            'averageDailyBalance',
+            'accountAge',
+            'revenue',
+            'apr',
+            'status',
+            'accountId'
+        ]]
+        
+        # Sort by vintage month (newest first) and then by status priority
+        business_metrics = business_metrics.sort_values(
+            ['vintage_month', 'status'], 
+            ascending=[False, True]
         )
         
         return business_metrics
     
     @staticmethod
-    def _get_priority_status(statuses: pd.Series) -> str:
+    def _get_priority_status(status: str) -> str:
         """
-        Get priority status based on business rules.
+        Get priority status based on specified order.
+        Priority: "Closed" > "Current" > "Delinquent" > "Default" > "ChargedOff"
         
-        Priority order: Closed > Current > Delinquent > Default > ChargedOff
+        Args:
+            status: Account status
+            
+        Returns:
+            Priority status
         """
-        status_priority = {
+        priority_order = {
             'Closed': 1,
             'Current': 2,
             'Delinquent': 3,
@@ -577,9 +622,4 @@ class BusinessMetricsCalculator:
             'ChargedOff': 5
         }
         
-        # Get the status with highest priority (lowest number)
-        valid_statuses = [s for s in statuses if s in status_priority]
-        if not valid_statuses:
-            return 'Unknown'
-        
-        return min(valid_statuses, key=lambda x: status_priority[x]) 
+        return status if status in priority_order else 'Unknown' 

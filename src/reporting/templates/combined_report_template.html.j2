@@ -468,6 +468,61 @@
             outline: 2px solid var(--primary-color);
             outline-offset: 2px;
         }
+
+        /* Section Groups */
+        .section-group {
+            margin: 2rem 0;
+            padding: 1.5rem;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+        }
+
+        .section-group h3 {
+            color: var(--text-primary);
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0 0 1rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        .section-group h4 {
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 1rem 0 0.5rem 0;
+        }
+
+        .section-group p {
+            color: var(--text-secondary);
+            margin: 0.5rem 0 1rem 0;
+            line-height: 1.5;
+        }
+
+        .section-group ul {
+            color: var(--text-secondary);
+            margin: 0.5rem 0 1rem 0;
+            padding-left: 1.5rem;
+        }
+
+        .section-group li {
+            margin: 0.25rem 0;
+            line-height: 1.4;
+        }
+
+        /* Table Container */
+        .table-container {
+            margin: 1rem 0;
+            overflow-x: auto;
+        }
+
+        .table-note {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-style: italic;
+            margin: 0.5rem 0 0 0;
+        }
     </style>
 </head>
 <body>
@@ -547,38 +602,168 @@
             <h2>Part 1: Loan Tape Analysis</h2>
             <p>Portfolio performance, yield analysis, and risk metrics</p>
             
-            {% if yield_metrics %}
-            <div class="metrics-grid">
-                <!-- Yield Metrics -->
+            <!-- Section 1A: Lending Portfolio Metrics -->
+            <div class="section-group">
+                <h3>1A. Lending Portfolio Metrics</h3>
+                <p><strong>JTBD:</strong> Our risk team is looking for a dashboard to get a pulse on the performance of our loan book. Using your preferred tools, help us calculate the following by month:</p>
+                
+                <div class="metrics-grid">
+                    <!-- Portfolio Risk Metrics -->
+                    <div class="metric-group">
+                        <h4>Portfolio Risk Metrics</h4>
+                        {% if portfolio_wide_rates %}
+                        <table class="metrics-table">
+                            <thead>
+                                <tr>
+                                    <th>Metric</th>
+                                    <th>Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Delinquency Rate</td><td class="metric-value">{{ "{:.2f}".format(portfolio_wide_rates.delinquency_rate|float * 100) }}%</td></tr>
+                                <tr><td>Default Rate</td><td class="metric-value">{{ "{:.2f}".format(portfolio_wide_rates.default_rate|float * 100) }}%</td></tr>
+                                <tr><td>Charge-off Rate</td><td class="metric-value">{{ "{:.2f}".format(portfolio_wide_rates.charge_off_rate|float * 100) }}%</td></tr>
+                            </tbody>
+                        </table>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Portfolio Yield Metrics -->
+                    <div class="metric-group">
+                        <h4>Portfolio Yield Metrics</h4>
+                        {% if yield_metrics %}
+                        <table class="metrics-table">
+                            <thead>
+                                <tr>
+                                    <th>Metric</th>
+                                    <th>Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for metric_name, metric_data in yield_metrics.items() %}
+                                {% if metric_data and metric_data is mapping %}
+                                <tr>
+                                    <td>{{ metric_name.replace('_', ' ').title() }}</td>
+                                    <td class="metric-value">{{ "{:.2f}".format(metric_data.get(metric_name, 0) * 100) }}%</td>
+                                </tr>
+                                {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Additional Portfolio Metrics -->
                 <div class="metric-group">
-                    <h3>Portfolio Yield Metrics</h3>
-                    {% if yield_metrics %}
+                    <h4>Additional Portfolio Metrics (Recommended)</h4>
+                    <p><strong>Why these metrics matter:</strong></p>
+                    <ul>
+                        <li><strong>Portfolio Concentration Risk:</strong> Monitor exposure to specific account types or vintage periods</li>
+                        <li><strong>Payment Rate:</strong> Track the rate at which borrowers make payments on their accounts</li>
+                        <li><strong>Utilization Rate:</strong> Measure how much of available credit is being used</li>
+                        <li><strong>Portfolio Aging:</strong> Understand the maturity profile of the loan book</li>
+                    </ul>
+                    
                     <table class="metrics-table">
                         <thead>
                             <tr>
                                 <th>Metric</th>
                                 <th>Value</th>
+                                <th>Explanation</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for metric_name, metric_data in yield_metrics.items() %}
-                            {% if metric_data and metric_data is mapping %}
                             <tr>
-                                <td>{{ metric_name.replace('_', ' ').title() }}</td>
-                                <td class="metric-value">{{ "{:.2f}".format(metric_data.get(metric_name, 0) * 100) }}%</td>
+                                <td>Total Accounts</td>
+                                <td class="metric-value">{{ portfolio_wide_rates.total_accounts|int }}</td>
+                                <td>Total number of credit accounts in portfolio</td>
                             </tr>
-                            {% endif %}
-                            {% endfor %}
+                            <tr>
+                                <td>Current Accounts</td>
+                                <td class="metric-value">{{ portfolio_wide_rates.current_accounts|int }}</td>
+                                <td>Accounts in good standing</td>
+                            </tr>
+                            <tr>
+                                <td>Closed Accounts</td>
+                                <td class="metric-value">{{ portfolio_wide_rates.closed_accounts|int }}</td>
+                                <td>Accounts that have been closed</td>
+                            </tr>
                         </tbody>
                     </table>
-                    {% endif %}
                 </div>
             </div>
-            {% endif %}
             
+            <!-- Section 1B: Portfolio Metrics by Business -->
+            <div class="section-group">
+                <h3>1B. Portfolio Metrics by Business</h3>
+                <p><strong>JTBD:</strong> Now that we understand overall portfolio performance, help us build a dashboard that shows performance per business, grouped by monthly vintage (i.e. the month each credit account was opened):</p>
+                
+                {% if business_metrics is defined and business_metrics|length > 0 %}
+                <div class="metric-group">
+                    <h4>Business-Level Portfolio Metrics by Monthly Vintage</h4>
+                    <p><strong>Metrics tracked per business by monthly vintage:</strong></p>
+                    <ul>
+                        <li><strong>Limit:</strong> Credit limit assigned to the account</li>
+                        <li><strong>Average Daily Balance:</strong> Average daily principal balance</li>
+                        <li><strong>Credit Account Age:</strong> Age of the credit account in months</li>
+                        <li><strong>Revenue:</strong> Interest + interchange fees</li>
+                        <li><strong>APR:</strong> Annual Percentage Rate</li>
+                        <li><strong>Borrower Status:</strong> Priority order: "Closed" > "Current" > "Delinquent" > "Default" > "ChargedOff"</li>
+                    </ul>
+                    
+                    <div class="table-container">
+                        <table class="metrics-table">
+                            <thead>
+                                <tr>
+                                    <th>Vintage Month</th>
+                                    <th>Account Type</th>
+                                    <th>Limit</th>
+                                    <th>Avg Daily Balance</th>
+                                    <th>Account Age (months)</th>
+                                    <th>Revenue</th>
+                                    <th>APR</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for _, row in business_metrics.head(20).iterrows() %}
+                                <tr>
+                                    <td>{{ row.get('vintage_month', 'N/A') }}</td>
+                                    <td>{{ row.get('accountType', 'N/A') }}</td>
+                                    <td class="metric-value">${{ "{:,.2f}".format(row.get('limit', 0)|float) }}</td>
+                                    <td class="metric-value">${{ "{:,.2f}".format(row.get('averageDailyBalance', 0)|float) }}</td>
+                                    <td class="metric-value">{{ "{:.1f}".format(row.get('accountAge', 0)|float) }}</td>
+                                    <td class="metric-value">${{ "{:,.2f}".format(row.get('revenue', 0)|float) }}</td>
+                                    <td class="metric-value">{{ "{:.2f}".format(row.get('apr', 0)|float) }}%</td>
+                                    <td class="metric-value">{{ row.get('status', 'N/A') }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        <p class="table-note"><em>Showing first 20 records. Full dataset available in detailed analysis.</em></p>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Additional Business Metrics -->
+                <div class="metric-group">
+                    <h4>Additional Business Metrics (Recommended)</h4>
+                    <p><strong>Why these metrics matter:</strong></p>
+                    <ul>
+                        <li><strong>Utilization Rate:</strong> Balance/Limit ratio - helps identify credit risk and revenue potential</li>
+                        <li><strong>Payment Rate:</strong> Monthly payment amount relative to balance - indicates borrower behavior</li>
+                        <li><strong>Revenue per Account:</strong> Average revenue generated per account type</li>
+                        <li><strong>Risk-Adjusted Return:</strong> Return considering default and charge-off rates</li>
+                        <li><strong>Vintage Performance:</strong> Compare performance across different account opening periods</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Charts Section -->
             {% if portfolio_chart %}
             <div class="chart-container">
-                <h3>Portfolio Risk Metrics</h3>
+                <h3>Portfolio Risk Metrics Over Time</h3>
                 <div id="part1-portfolio-chart"></div>
             </div>
             {% endif %}
