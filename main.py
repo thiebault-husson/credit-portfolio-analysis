@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Highbeam Case Study - Credit Portfolio Analysis
+Credit Portfolio Analysis
 Main entry point for generating comprehensive analysis reports.
 """
 
@@ -22,7 +22,7 @@ from src.reporting.html_report_generator import HTMLReportGenerator
 def main():
     """Main function to run the complete analysis."""
     parser = argparse.ArgumentParser(
-        description="Highbeam Case Study - Credit Portfolio Analysis",
+        description="Credit Portfolio Analysis",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -77,7 +77,7 @@ Examples:
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     
-    print("🚀 Starting Highbeam Case Study Analysis...")
+    print("🚀 Starting Credit Portfolio Analysis...")
     print(f"📁 Data directory: {data_dir}")
     print(f"📊 Output directory: {output_dir}")
     
@@ -144,7 +144,7 @@ Examples:
         
         # Generate combined report with date-time prefix
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        report_filename = f"{timestamp}_highbeam_case_study_analysis.html"
+        report_filename = f"{timestamp}_credit_portfolio_analysis.html"
         report_path = output_dir / report_filename
         
         report_generator.generate_combined_report(
